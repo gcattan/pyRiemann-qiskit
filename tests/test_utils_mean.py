@@ -4,7 +4,7 @@ from pyriemann_qiskit.utils.mean import fro_mean_convex
 
 def test_mean_convex_shape(get_covmats):
     """Test the shape of mean"""
-    n_trials, n_channels = 5, 2
+    n_trials, n_channels = 5, 3
     covmats = get_covmats(n_trials, n_channels)
     C = fro_mean_convex(covmats)
     assert C.shape == (n_channels, n_channels)
@@ -36,7 +36,7 @@ def test_mean_convex_all_equals():
 
 def test_mean_convex_mixed():
     """Test the shape of mean"""
-    n_trials, n_channels = 10, 2
+    n_trials, n_channels = 5, 2
     covmats_0 = np.zeros((n_trials, n_channels, n_channels))
     covmats_1 = np.ones((n_trials, n_channels, n_channels))
     expected_mean = np.full((n_channels, n_channels), 0.5)
