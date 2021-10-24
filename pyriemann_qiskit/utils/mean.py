@@ -36,22 +36,8 @@ def fro_mean_convex(covmats):
 
     qp = QuadraticProgram()
     qp.from_docplex(prob)
-
-    # qubo = QuadraticProgramToQubo().convert(qp)
-    # TODO: Check parameters
     
-    admm_params = ADMMParameters(
-                            rho_initial=1001,
-                            beta=1000,
-                            factor_c=900,
-                            maxiter=100,
-                            three_block=True, tol=1.e-6
-                        )
-    # TODO: QUBO
-    # initialize ADMM with classical QUBO and convex optimizer
-    admm = ADMMOptimizer(params=admm_params,
-                        continuous_optimizer=CobylaOptimizer())
-    result = admm.solve(qp)
+    result = CobylaOptimizer().solve(qp)
 
     return np.reshape(result.x, (n_channels, n_channels))
 
