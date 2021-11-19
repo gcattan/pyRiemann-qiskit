@@ -16,7 +16,7 @@ from qiskit.optimization.algorithms.admm_optimizer import ADMMParameters, ADMMOp
 import numpy as np
 
 
-def fro_mean_convex(covmats):
+def fro_mean_convex(covmats, sample_weight=None):
     n_trials, n_channels, _ = covmats.shape
     channels=range(n_channels)
     trials=range(n_trials)
