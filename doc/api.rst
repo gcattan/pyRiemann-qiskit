@@ -32,3 +32,13 @@ Hyper-parameters generation
     :toctree: generated/
 
     gen_zz_feature_map
+
+Exceptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _exceptions_api:
+.. currentmodule:: pyriemann_qiskit.utils.exceptions
+
+.. autosummary::
+    :toctree: generated/
+
+    gen_zz_feature_map
