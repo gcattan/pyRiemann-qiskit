@@ -1,4 +1,5 @@
 from qiskit.circuit.library import ZZFeatureMap
+from .exceptions import IncorrectRepsParameter
 
 
 def gen_zz_feature_map(reps=2, entanglement='linear'):
@@ -28,8 +29,7 @@ def gen_zz_feature_map(reps=2, entanglement='linear'):
         https://qiskit.org/documentation/stable/0.19/stubs/qiskit.circuit.library.NLocal.html
     """
     if reps < 1:
-        raise ValueError("Parameter reps must be superior \
-                          or equal to 1 (Got %d)" % reps)
+        raise IncorrectRepsParameter(reps)
 
     return lambda n_features: ZZFeatureMap(feature_dimension=n_features,
                                            reps=reps,

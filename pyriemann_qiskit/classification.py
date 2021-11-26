@@ -12,6 +12,7 @@ from qiskit.aqua.components.optimizers import SPSA
 from datetime import datetime
 import logging
 from .utils.hyper_params_factory import gen_zz_feature_map
+from .utils.exceptions import InitAlgoNotImplemented, BinaryClassificationOnly
 
 logger.level = logging.INFO
 
@@ -144,8 +145,7 @@ class QuanticClassifierBase(BaseEstimator, ClassifierMixin):
         self._log("Fitting: ", X.shape)
         self.classes_ = np.unique(y)
         if len(self.classes_) != 2:
-            raise Exception("Only binary classification \
-                             is currently supported.")
+            raise BinaryClassificationOnly()
         y = self._map_classes_to_0_1(y)
 
         class1, class0 = self._split_classes(X, y)
@@ -181,7 +181,7 @@ class QuanticClassifierBase(BaseEstimator, ClassifierMixin):
         return self
 
     def _init_algo(self, n_features):
-        raise Exception("Init algo method was not implemented")
+        raise InitAlgoNotImplemented()
 
     def _train(self, X, y):
         self._log("Training...")

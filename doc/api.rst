@@ -41,4 +41,6 @@ Exceptions
 .. autosummary::
     :toctree: generated/
 
-    gen_zz_feature_map
+    InitAlgoNotImplemented
+    BinaryClassificationOnly
+    IncorrectRepsParameter
