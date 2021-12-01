@@ -135,7 +135,10 @@ class QuanticClassifierBase(BaseEstimator, ClassifierMixin):
         y : ndarray, shape (n_samples,)
             Target vector relative to X.
 
-        :raises Exception: if the number of classes different than 2
+        Raises
+        ------
+        Exception
+            Raised if the number of classes is different than 2
 
         Returns
         -------
