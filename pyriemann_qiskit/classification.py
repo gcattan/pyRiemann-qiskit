@@ -337,7 +337,7 @@ class QuanticVQC(QuanticClassifierBase):
     --------
     QuanticClassifierBase
 
-    :raises ValueError: if `quantum` is False
+    :raise: ValueError: if `quantum` is False
 
     References
     ----------
