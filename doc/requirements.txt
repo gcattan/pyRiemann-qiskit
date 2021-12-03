@@ -7,6 +7,7 @@ seaborn
 scikit-learn
 joblib
 pandas
-cvxpy==1.1.7
+ecos==2.0.7rc2
+cvxpy==1.1.12
 qiskit
 git+https://github.com/pyRiemann/pyRiemann#egg=pyriemann
