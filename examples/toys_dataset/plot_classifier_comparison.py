@@ -62,8 +62,8 @@ names = ["Linear SVM", "RBF SVM", "VQC", "QSVM"]
 classifiers = [
     SVC(kernel="linear", C=0.025),
     SVC(gamma='auto', C=0.001),
-    # QuanticVQC(),
-    # QuanticSVM(quantum=False)
+    QuanticVQC(),
+    QuanticSVM(quantum=False)
     ]
 
 # Warning: There is a known convergence issue with QSVM
