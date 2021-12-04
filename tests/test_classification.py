@@ -23,6 +23,7 @@ class QuantumClassifierTestCase:
         self.clf_init_with_quantum_true(classif)
         self.clf_split_classes(classif, samples, labels, n_samples,
                                n_features, n_classes)
+        self.clf_fvt(classif, samples, labels, n_samples, n_features, n_classes)
 
 
 class TestClassifier(QuantumClassifierTestCase):
@@ -76,71 +77,72 @@ class TestClassifier(QuantumClassifierTestCase):
         assert np.shape(x_class1) == (class_len, n_features)
         assert np.shape(x_class0) == (class_len, n_features)
 
+    def clf_fvt(self, classif, samples, labels, n_samples, n_features, n_classes):
+        if classif is QuanticSVM:
+            self.clf_fvt_classical_svc(classif, labels, n_samples, n_features, n_classes)
+            self.clf_fvt_quantic_svc(classif, labels, n_samples, n_features, n_classes)
+        else:
+            self.clf_fvt_vqc(classif, samples, labels)
 
-def test_quantic_fvt_Classical(get_labels):
-    """ Perform standard SVC test
-    (canary test to assess pipeline correctness)
-    """
-    # When quantum=False, it should use
-    # classical SVC implementation from SKlearn
-    q = QuanticSVM(quantum=False, verbose=False)
-    # We need to have different values for first and second classes
-    # in our samples or vector machine will not converge
-    n_samples, n_features, n_classes = 100, 9, 2
-    class_len = n_samples // n_classes  # balanced set
-    samples_0 = np.zeros((class_len, n_features))
-    samples_1 = np.ones((class_len, n_features))
-    samples = np.concatenate((samples_0, samples_1), axis=0)
-    labels = get_labels(n_samples, n_classes)
+    def clf_fvt_classical_svc(self, classif, labels, n_samples, n_features, n_classes):
+        """ Perform standard SVC test
+        (canary test to assess pipeline correctness)
+        """
+        # When quantum=False, it should use
+        # classical SVC implementation from SKlearn
+        q = classif(quantum=False, verbose=False)
+        # We need to have different values for first and second classes
+        # in our samples or vector machine will not converge
+        class_len = n_samples // n_classes  # balanced set
+        samples_0 = np.zeros((class_len, n_features))
+        samples_1 = np.ones((class_len, n_features))
+        samples = np.concatenate((samples_0, samples_1), axis=0)
 
-    q.fit(samples, labels)
-    # This will autodefine testing sets
-    prediction = q.predict(samples)
-    # In this case, using SVM, predicting accuracy should be 100%
-    assert prediction[:class_len].all() == q.classes_[0]
-    assert prediction[class_len:].all() == q.classes_[1]
-
-
-def test_quantic_svm_fvt_simulated_quantum(get_labels):
-    """Perform SVC on a simulated quantum computer.
-    This test can also be run on a real computer by providing a qAccountToken
-    To do so, you need to use your own token, by registering on:
-    https://quantum-computing.ibm.com/
-    Note that the "real quantum version" of this test may also take some time.
-    """
-    # We will use a quantum simulator on the local machine
-    q = QuanticSVM(quantum=True, verbose=False)
-    # We need to have different values for target and non-target in our samples
-    # or vector machine will not converge
-    # To achieve testing in a reasonnable amount of time,
-    # we will lower the size of the feature and the number of trials
-    n_samples, n_features, n_classes = 10, 4, 2
-    class_len = n_samples // n_classes  # balanced set
-    samples_0 = np.zeros((class_len, n_features))
-    samples_1 = np.ones((class_len, n_features))
-    samples = np.concatenate((samples_0, samples_1), axis=0)
-    labels = get_labels(n_samples, n_classes)
-
-    q.fit(samples, labels)
-    prediction = q.predict(samples)
-    # In this case, using SVM, predicting accuracy should be 100%
-    assert prediction[:class_len].all() == q.classes_[0]
-    assert prediction[class_len:].all() == q.classes_[1]
+        q.fit(samples, labels)
+        # This will autodefine testing sets
+        prediction = q.predict(samples)
+        # In this case, using SVM, predicting accuracy should be 100%
+        assert prediction[:class_len].all() == q.classes_[0]
+        assert prediction[class_len:].all() == q.classes_[1]
 
 
-def test_quantic_vqc_fvt_simulated_quantum(get_feats, get_labels):
-    """Perform VQC on a simulated quantum computer"""
-    # We will use a quantum simulator on the local machine
-    # quantum parameter for VQC is always true
-    q = QuanticVQC(verbose=False)
-    # To achieve testing in a reasonnable amount of time,
-    # we will lower the size of the feature and the number of trials
-    n_samples, n_features, n_classes = 4, 4, 2
-    samples = get_feats(n_samples, n_features)
-    labels = get_labels(n_samples, n_classes)
+    def clf_fvt_quantic_svc(self, classif, labels, n_samples, n_features, n_classes):
+        """Perform SVC on a simulated quantum computer.
+        This test can also be run on a real computer by providing a qAccountToken
+        To do so, you need to use your own token, by registering on:
+        https://quantum-computing.ibm.com/
+        Note that the "real quantum version" of this test may also take some time.
+        """
+        # We will use a quantum simulator on the local machine
+        q = QuanticSVM(quantum=True, verbose=False)
+        # We need to have different values for target and non-target in our samples
+        # or vector machine will not converge
+        # To achieve testing in a reasonnable amount of time,
+        # we will lower the size of the feature and the number of trials
+        # n_samples, n_features, n_classes = 10, 4, 2
+        class_len = n_samples // n_classes  # balanced set
+        samples_0 = np.zeros((class_len, n_features))
+        samples_1 = np.ones((class_len, n_features))
+        samples = np.concatenate((samples_0, samples_1), axis=0)
 
-    q.fit(samples, labels)
-    prediction = q.predict(samples)
-    # Considering the inputs, this probably make no sense to test accuracy.
-    # Instead, we could consider this test as a canary test
-    assert len(prediction) == len(labels)
+        q.fit(samples, labels)
+        prediction = q.predict(samples)
+        # In this case, using SVM, predicting accuracy should be 100%
+        assert prediction[:class_len].all() == q.classes_[0]
+        assert prediction[class_len:].all() == q.classes_[1]
+
+
+    def clf_fvt_vqc(self, classif, samples, labels):
+        """Perform VQC on a simulated quantum computer"""
+        # We will use a quantum simulator on the local machine
+        # quantum parameter for VQC is always true
+        q = classif(verbose=False)
+        # To achieve testing in a reasonnable amount of time,
+        # we will lower the size of the feature and the number of trials
+        # n_samples, n_features, n_classes = 4, 4, 2
+
+        q.fit(samples, labels)
+        prediction = q.predict(samples)
+        # Considering the inputs, this probably make no sense to test accuracy.
+        # Instead, we could consider this test as a canary test
+        assert len(prediction) == len(labels)
