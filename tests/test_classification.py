@@ -13,12 +13,16 @@ rclf = [QuanticVQC, QuanticSVM]
 @pytest.mark.parametrize("classif", rclf)
 class QuantumClassifierTestCase:
     def test_two_classes(self, classif, get_covmats, get_labels, get_feats):
-        n_matrices, n_channels, n_classes = 100, 3, 2
-        covset = get_covmats(n_matrices, n_channels)
-        labels = get_labels(n_matrices, n_classes)
+        n_samples, n_channels, n_classes = 100, 3, 2
+        n_features = n_channels ** 2
+        samples = get_feats(n_samples, n_features)
+        labels = get_labels(n_samples, n_classes)
+        covset = get_covmats(n_samples, n_channels)
         self.clf_params(classif, covset, labels)
         self.clf_init_with_quantum_false(classif)
         self.clf_init_with_quantum_true(classif)
+        self.clf_split_classes(classif, samples, labels, n_samples,
+                               n_features, n_classes)
 
 
 class TestClassifier(QuantumClassifierTestCase):
@@ -58,23 +62,19 @@ class TestClassifier(QuantumClassifierTestCase):
         with pytest.raises(RequestsApiError):
             q._init_quantum()
 
+    def clf_split_classes(self, classif, samples, labels,
+                          n_samples, n_features, n_classes):
+        """Test _split_classes method of quantum classifiers"""
+        q = classif()
 
-def test_qsvm_splitclasses(get_feats, get_labels):
-    """Test _split_classes method of quantum classifiers"""
-    q = QuanticSVM(quantum=False)
+        # As fit method is not called here, classes_ is not set.
+        # so we need to provide the classes ourselves.
+        q.classes_ = range(0, n_classes)
 
-    n_samples, n_features, n_classes = 100, 9, 2
-    samples = get_feats(n_samples, n_features)
-    labels = get_labels(n_samples, n_classes)
-
-    # As fit method is not called here, classes_ is not set.
-    # so we need to provide the classes ourselves.
-    q.classes_ = range(0, n_classes)
-
-    x_class1, x_class0 = q._split_classes(samples, labels)
-    class_len = n_samples // n_classes  # balanced set
-    assert np.shape(x_class1) == (class_len, n_features)
-    assert np.shape(x_class0) == (class_len, n_features)
+        x_class1, x_class0 = q._split_classes(samples, labels)
+        class_len = n_samples // n_classes  # balanced set
+        assert np.shape(x_class1) == (class_len, n_features)
+        assert np.shape(x_class0) == (class_len, n_features)
 
 
 def test_quantic_fvt_Classical(get_labels):
