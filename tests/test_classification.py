@@ -8,26 +8,28 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 
 rclf = [QuanticVQC, QuanticSVM]
 
+
 @pytest.mark.parametrize("classif", rclf)
 class QuantumClassifierTestCase:
     def test_two_classes(self, classif, get_covmats, get_labels, get_feats):
         n_matrices, n_channels, n_classes = 100, 3, 2
         covset = get_covmats(n_matrices, n_channels)
         labels = get_labels(n_matrices, n_classes)
-        self.test_params(classif, covset, labels)
+        self.clf_params(classif, covset, labels)
+        if classif is QuanticVQC:
+            self.clf_classical_should_raise_value_error(classif)
+
 
 class TestClassifier(QuantumClassifierTestCase):
-    def test_params(self, classif, covset, labels):
+    def clf_params(self, classif, covset, labels):
         clf = make_pipeline(XdawnCovariances(), TangentSpace(),
-                            classif(quantum=False))
+                            classif())
         skf = StratifiedKFold(n_splits=5)
-        n_matrices, n_channels, n_classes = 100, 3, 2
         cross_val_score(clf, covset, labels, cv=skf, scoring='roc_auc')
 
-
-def test_vqc_classical_should_return_value_error():
-    with pytest.raises(ValueError):
-        QuanticVQC(quantum=False)
+    def clf_classical_should_raise_value_error(self, classif):
+        with pytest.raises(ValueError):
+            classif(quantum=False)
 
 
 def test_qsvm_init():
