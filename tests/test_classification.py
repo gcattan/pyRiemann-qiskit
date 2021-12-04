@@ -6,16 +6,23 @@ from pyriemann_qiskit.classification import QuanticSVM, QuanticVQC
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 
+rclf = [QuanticVQC, QuanticSVM]
 
-def test_params(get_covmats, get_labels):
-    clf = make_pipeline(XdawnCovariances(), TangentSpace(),
-                        QuanticSVM(quantum=False))
-    skf = StratifiedKFold(n_splits=5)
-    n_matrices, n_channels, n_classes = 100, 3, 2
-    covset = get_covmats(n_matrices, n_channels)
-    labels = get_labels(n_matrices, n_classes)
+@pytest.mark.parametrize("classif", rclf)
+class QuantumClassifierTestCase:
+    def test_two_classes(self, classif, get_covmats, get_labels, get_feats):
+        n_matrices, n_channels, n_classes = 100, 3, 2
+        covset = get_covmats(n_matrices, n_channels)
+        labels = get_labels(n_matrices, n_classes)
+        self.test_params(classif, covset, labels)
 
-    cross_val_score(clf, covset, labels, cv=skf, scoring='roc_auc')
+class TestClassifier(QuantumClassifierTestCase):
+    def test_params(self, classif, covset, labels):
+        clf = make_pipeline(XdawnCovariances(), TangentSpace(),
+                            classif(quantum=False))
+        skf = StratifiedKFold(n_splits=5)
+        n_matrices, n_channels, n_classes = 100, 3, 2
+        cross_val_score(clf, covset, labels, cv=skf, scoring='roc_auc')
 
 
 def test_vqc_classical_should_return_value_error():
