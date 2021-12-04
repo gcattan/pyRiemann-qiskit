@@ -5,6 +5,7 @@ from pyriemann.estimation import XdawnCovariances
 from pyriemann_qiskit.classification import QuanticSVM, QuanticVQC
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+from qiskit.providers.ibmq.api.exceptions import RequestsApiError
 
 rclf = [QuanticVQC, QuanticSVM]
 
@@ -16,8 +17,8 @@ class QuantumClassifierTestCase:
         covset = get_covmats(n_matrices, n_channels)
         labels = get_labels(n_matrices, n_classes)
         self.clf_params(classif, covset, labels)
-        if classif is QuanticVQC:
-            self.clf_classical_should_raise_value_error(classif)
+        self.clf_init_with_quantum_false(classif)
+        self.clf_init_with_quantum_true(classif)
 
 
 class TestClassifier(QuantumClassifierTestCase):
@@ -27,36 +28,35 @@ class TestClassifier(QuantumClassifierTestCase):
         skf = StratifiedKFold(n_splits=5)
         cross_val_score(clf, covset, labels, cv=skf, scoring='roc_auc')
 
-    def clf_classical_should_raise_value_error(self, classif):
-        with pytest.raises(ValueError):
-            classif(quantum=False)
+    def clf_init_with_quantum_false(self, classif):
+        if classif is QuanticVQC:
+            with pytest.raises(ValueError):
+                classif(quantum=False)
+        else:
+            # if "classical" computation enable,
+            # no provider and backend should be defined
+            q = QuanticSVM(quantum=False)
+            q._init_quantum()
+            assert not q.quantum
+            assert not hasattr(q, "backend")
+            assert not hasattr(q, "provider")
 
-
-def test_qsvm_init():
-    """Test init of quantum classifiers"""
-    # if "classical" computation enable,
-    # no provider and backend should be defined
-    q = QuanticSVM(quantum=False)
-    q._init_quantum()
-    assert not q.quantum
-    assert not hasattr(q, "backend")
-    assert not hasattr(q, "provider")
-    # if "quantum" computation enabled, but no accountToken are provided,
-    # then "quantum" simulation will be enabled
-    # i.e., no remote quantum provider will be defined
-    q = QuanticSVM(quantum=True)
-    q._init_quantum()
-    assert q.quantum
-    assert hasattr(q, "_backend")
-    assert not hasattr(q, "_provider")
-    # if "quantum" computation enabled, and accountToken is provided,
-    # then real quantum backend is used
-    # this should raise a error as uncorrect API Token is passed
-    try:
-        q = QuanticSVM(labelsquantum=True, qAccountToken="Test")
-        assert False  # Should never reach this line
-    except Exception:
-        pass
+    def clf_init_with_quantum_true(self, classif):
+        """Test init of quantum classifiers"""
+        # if "quantum" computation enabled, but no accountToken are provided,
+        # then "quantum" simulation will be enabled
+        # i.e., no remote quantum provider will be defined
+        q = classif(quantum=True)
+        q._init_quantum()
+        assert q.quantum
+        assert hasattr(q, "_backend")
+        assert not hasattr(q, "_provider")
+        # if "quantum" computation enabled, and accountToken is provided,
+        # then real quantum backend is used
+        # this should raise a error as uncorrect API Token is passed
+        q = classif(quantum=True, q_account_token="Test")
+        with pytest.raises(RequestsApiError):
+            q._init_quantum()
 
 
 def test_qsvm_splitclasses(get_feats, get_labels):
