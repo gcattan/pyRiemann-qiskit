@@ -67,6 +67,24 @@ def get_feats(rndstate):
     return _gen_feat
 
 
+def generate_bin_feats(n_samples, n_features):
+    """Generate a balanced binary set of n_features-dimensional
+     samples for test purpose"""
+    n_classes = 2
+    class_len = n_samples // n_classes  # balanced set
+    samples_0 = np.zeros((class_len, n_features))
+    samples_1 = np.ones((class_len, n_features))
+    samples = np.concatenate((samples_0, samples_1), axis=0)
+    return samples
+
+
+@pytest.fixture
+def get_bin_feats():
+    def _generate_bin_feats(n_samples, n_features):
+        return generate_bin_feats(n_samples, n_features)
+    return _generate_bin_feats
+
+
 def _get_linear_entanglement(n_qbits_in_block, n_features):
     return [list(range(i, i + n_qbits_in_block))
             for i in range(n_features - n_qbits_in_block + 1)]
