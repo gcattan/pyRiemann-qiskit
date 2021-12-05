@@ -13,25 +13,10 @@ rclf = [QuanticVQC, QuanticSVM]
 @pytest.mark.parametrize("classif", rclf)
 @pytest.mark.parametrize("quantum", [True, False])
 class QuantumClassifierTestCase:
-    def prepare_data_params(self):
-        self.n_samples = 100
-        self.class_len = self.n_samples // self.n_classes  # balanced set
-        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features)
-        return samples, labels
-
-    def prepare_data_quantic_svm(self):
-        self.n_samples = 10
-        # We need to have different values for first and second classes
-        # in our samples or vector machine will not converge
-        self.class_len = self.n_samples // self.n_classes  # balanced set
-        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features, False)
-        return samples, labels
-
-    def prepare_data_quantic_vqc(self):
-        # To achieve testing in a reasonnable amount of time,
-        # we will lower the size of the feature and the number of trials
-        self.n_samples = 4
-        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features)
+    def prepare_data(self, n_samples, random=True):
+        self.n_samples = n_samples
+        self.class_len = n_samples // self.n_classes  # balanced set
+        samples, labels = self.prepare_bin_data(n_samples, self.n_features, random)
         return samples, labels
 
     def test_two_classes(self, classif, quantum, prepare_bin_data):
@@ -44,8 +29,9 @@ class QuantumClassifierTestCase:
         else:
             self.clf_init_with_quantum_false(classif)
         
-        if quantum or (not quantum and classif is QuanticSVM):
-            samples, labels = self.prepare_data_params()
+        is_classic_svm = not quantum and classif is QuanticSVM
+        if quantum or is_classic_svm:
+            samples, labels = self.prepare_data(100)
             self.clf_params(classif, samples, labels)
             self.clf_split_classes(classif, samples, labels)
 
@@ -104,10 +90,14 @@ class TestClassifier(QuantumClassifierTestCase):
 
     def clf_fvt(self, classif, quantum): 
         if classif is QuanticSVM:
-            samples, labels = self.prepare_data_quantic_svm()
+            # We need to have different values for first and second classes
+            # in our samples or vector machine will not converge
+            samples, labels = self.prepare_data(10, False)
             self.clf_fvt_quantic_svc(classif, samples, labels, quantum)
         elif quantum:
-            samples, labels = self.prepare_data_quantic_vqc()
+            # To achieve testing in a reasonnable amount of time,
+            # we will lower the size of the feature and the number of trials
+            samples, labels = self.prepare_data(4)
             self.clf_fvt_vqc(classif, samples, labels)
 
     def clf_fvt_quantic_svc(self, classif, samples, labels, quantum):
