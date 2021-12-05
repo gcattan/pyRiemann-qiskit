@@ -11,9 +11,11 @@ rclf = [QuanticVQC, QuanticSVM]
 
 
 @pytest.mark.parametrize("classif", rclf)
+@pytest.mark.parametrize("quantum", [True, False])
 class QuantumClassifierTestCase:
     def prepare_data_params(self):
         self.n_samples = 100
+        self.class_len = self.n_samples // self.n_classes  # balanced set
         samples = self.get_feats(self.n_samples, self.n_features)
         labels = self.get_labels(self.n_samples, self.n_classes)
         return samples, labels
@@ -23,9 +25,7 @@ class QuantumClassifierTestCase:
         # We need to have different values for first and second classes
         # in our samples or vector machine will not converge
         self.class_len = self.n_samples // self.n_classes  # balanced set
-        samples_0 = np.zeros((self.class_len, self.n_features))
-        samples_1 = np.ones((self.class_len, self.n_features))
-        samples = np.concatenate((samples_0, samples_1), axis=0)
+        samples = self.get_bin_feats(self.n_samples, self.n_features)
         labels = self.get_labels(self.n_samples, self.n_classes)
         return samples, labels
 
@@ -37,21 +37,25 @@ class QuantumClassifierTestCase:
         labels = self.get_labels(self.n_samples, self.n_classes)
         return samples, labels
 
-    def test_two_classes(self, classif, get_covmats, get_labels, get_feats):
+    def test_two_classes(self, classif, quantum, get_covmats, get_labels, get_feats, get_bin_feats):
         self.get_covmats = get_covmats
         self.get_labels = get_labels
         self.get_feats = get_feats
+        self.get_bin_feats = get_bin_feats
         self.n_channels, self.n_classes = 3, 2
         self.n_features = self.n_channels ** 2
 
-        self.clf_init_with_quantum_false(classif)
-        self.clf_init_with_quantum_true(classif)
+        if quantum:
+            self.clf_init_with_quantum_true(classif)
+        else:
+            self.clf_init_with_quantum_false(classif)
+        
+        if quantum or (not quantum and classif is QuanticSVM):
+            samples, labels = self.prepare_data_params()
+            self.clf_params(classif, samples, labels)
+            self.clf_split_classes(classif, samples, labels)
 
-        samples, labels = self.prepare_data_params()
-        self.clf_params(classif, samples, labels)
-        self.clf_split_classes(classif, samples, labels)
-
-        self.clf_fvt(classif)
+        self.clf_fvt(classif, quantum)
 
 
 class TestClassifier(QuantumClassifierTestCase):
@@ -100,36 +104,19 @@ class TestClassifier(QuantumClassifierTestCase):
         q.classes_ = range(0, self.n_classes)
 
         x_class1, x_class0 = q._split_classes(samples, labels)
-        class_len = self.n_samples // self.n_classes  # balanced set
-        assert np.shape(x_class1) == (class_len, self.n_features)
-        assert np.shape(x_class0) == (class_len, self.n_features)
+        
+        assert np.shape(x_class1) == (self.class_len, self.n_features)
+        assert np.shape(x_class0) == (self.class_len, self.n_features)
 
-    def clf_fvt(self, classif): 
+    def clf_fvt(self, classif, quantum): 
         if classif is QuanticSVM:
             samples, labels = self.prepare_data_quantic_svm()
-            self.clf_fvt_classical_svc(classif, samples, labels)
-            self.clf_fvt_quantic_svc(classif, samples, labels)
-        else:
+            self.clf_fvt_quantic_svc(classif, samples, labels, quantum)
+        elif quantum:
             samples, labels = self.prepare_data_quantic_vqc()
             self.clf_fvt_vqc(classif, samples, labels)
 
-    def clf_fvt_classical_svc(self, classif, samples, labels):
-        """ Perform standard SVC test
-        (canary test to assess pipeline correctness)
-        """
-        # When quantum=False, it should use
-        # classical SVC implementation from SKlearn
-        q = classif(quantum=False, verbose=False)
-
-        q.fit(samples, labels)
-        # This will autodefine testing sets
-        prediction = q.predict(samples)
-        # In this case, using SVM, predicting accuracy should be 100%
-        assert prediction[:self.class_len].all() == q.classes_[0]
-        assert prediction[self.class_len:].all() == q.classes_[1]
-
-
-    def clf_fvt_quantic_svc(self, classif, samples, labels):
+    def clf_fvt_quantic_svc(self, classif, samples, labels, quantum):
         """Perform SVC on a simulated quantum computer.
         This test can also be run on a real computer by providing a qAccountToken
         To do so, you need to use your own token, by registering on:
@@ -137,7 +124,7 @@ class TestClassifier(QuantumClassifierTestCase):
         Note that the "real quantum version" of this test may also take some time.
         """
         # We will use a quantum simulator on the local machine
-        q = QuanticSVM(quantum=True, verbose=False)
+        q = QuanticSVM(quantum=quantum, verbose=False)
 
         q.fit(samples, labels)
         prediction = q.predict(samples)
