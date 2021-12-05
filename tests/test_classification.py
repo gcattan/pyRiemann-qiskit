@@ -16,8 +16,7 @@ class QuantumClassifierTestCase:
     def prepare_data_params(self):
         self.n_samples = 100
         self.class_len = self.n_samples // self.n_classes  # balanced set
-        samples = self.get_feats(self.n_samples, self.n_features)
-        labels = self.get_labels(self.n_samples, self.n_classes)
+        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features)
         return samples, labels
 
     def prepare_data_quantic_svm(self):
@@ -25,23 +24,18 @@ class QuantumClassifierTestCase:
         # We need to have different values for first and second classes
         # in our samples or vector machine will not converge
         self.class_len = self.n_samples // self.n_classes  # balanced set
-        samples = self.get_bin_feats(self.n_samples, self.n_features)
-        labels = self.get_labels(self.n_samples, self.n_classes)
+        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features, False)
         return samples, labels
 
     def prepare_data_quantic_vqc(self):
         # To achieve testing in a reasonnable amount of time,
         # we will lower the size of the feature and the number of trials
         self.n_samples = 4
-        samples = self.get_feats(self.n_samples, self.n_features)
-        labels = self.get_labels(self.n_samples, self.n_classes)
+        samples, labels = self.prepare_bin_data(self.n_samples, self.n_features)
         return samples, labels
 
-    def test_two_classes(self, classif, quantum, get_covmats, get_labels, get_feats, get_bin_feats):
-        self.get_covmats = get_covmats
-        self.get_labels = get_labels
-        self.get_feats = get_feats
-        self.get_bin_feats = get_bin_feats
+    def test_two_classes(self, classif, quantum, prepare_bin_data):
+        self.prepare_bin_data = prepare_bin_data
         self.n_channels, self.n_classes = 3, 2
         self.n_features = self.n_channels ** 2
 
