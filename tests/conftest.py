@@ -48,7 +48,8 @@ def get_covmats_params(rndstate):
 
 
 def _get_labels(n_matrices, n_classes):
-        return np.arange(n_classes).repeat(n_matrices // n_classes)
+    return np.arange(n_classes).repeat(n_matrices // n_classes)
+
 
 @pytest.fixture
 def get_labels():
@@ -93,6 +94,7 @@ def prepare_bin_data(rndstate):
         labels = _get_labels(n_samples, 2)
         return samples, labels
     return _prepare_bin_data
+
 
 def _get_linear_entanglement(n_qbits_in_block, n_features):
     return [list(range(i, i + n_qbits_in_block))

@@ -16,7 +16,8 @@ class QuantumClassifierTestCase:
     def prepare_data(self, n_samples, random=True):
         self.n_samples = n_samples
         self.class_len = n_samples // self.n_classes  # balanced set
-        samples, labels = self.prepare_bin_data(n_samples, self.n_features, random)
+        samples, labels = self.prepare_bin_data(n_samples, self.n_features,
+                                                random)
         return samples, labels
 
     def test_two_classes(self, classif, quantum, prepare_bin_data):
@@ -28,7 +29,7 @@ class QuantumClassifierTestCase:
             self.clf_init_with_quantum_true(classif)
         else:
             self.clf_init_with_quantum_false(classif)
-        
+
         is_classic_svm = not quantum and classif is QuanticSVM
         if quantum or is_classic_svm:
             samples, labels = self.prepare_data(100)
@@ -38,7 +39,7 @@ class QuantumClassifierTestCase:
         self.clf_fvt(classif, quantum)
 
 
-class TestClassifier(QuantumClassifierTestCase):
+class BinaryClassifier(QuantumClassifierTestCase):
     def clf_params(self, classif, samples, labels):
         clf = make_pipeline(XdawnCovariances(), TangentSpace(),
                             classif())
@@ -84,11 +85,11 @@ class TestClassifier(QuantumClassifierTestCase):
         q.classes_ = range(0, self.n_classes)
 
         x_class1, x_class0 = q._split_classes(samples, labels)
-        
+
         assert np.shape(x_class1) == (self.class_len, self.n_features)
         assert np.shape(x_class0) == (self.class_len, self.n_features)
 
-    def clf_fvt(self, classif, quantum): 
+    def clf_fvt(self, classif, quantum):
         if classif is QuanticSVM:
             # We need to have different values for first and second classes
             # in our samples or vector machine will not converge
@@ -102,10 +103,12 @@ class TestClassifier(QuantumClassifierTestCase):
 
     def clf_fvt_quantic_svc(self, classif, samples, labels, quantum):
         """Perform SVC on a simulated quantum computer.
-        This test can also be run on a real computer by providing a qAccountToken
+        This test can also be run on a real computer
+        by providing a qAccountToken.
         To do so, you need to use your own token, by registering on:
         https://quantum-computing.ibm.com/
-        Note that the "real quantum version" of this test may also take some time.
+        Note that the "real quantum version" of this test may
+        also take some time.
         """
         # We will use a quantum simulator on the local machine
         q = QuanticSVM(quantum=quantum, verbose=False)
@@ -116,13 +119,12 @@ class TestClassifier(QuantumClassifierTestCase):
         assert prediction[:self.class_len].all() == q.classes_[0]
         assert prediction[self.class_len:].all() == q.classes_[1]
 
-
     def clf_fvt_vqc(self, classif, samples, labels):
         """Perform VQC on a simulated quantum computer"""
         # We will use a quantum simulator on the local machine
         # quantum parameter for VQC is always true
         q = classif(verbose=False)
-        
+
         q.fit(samples, labels)
         prediction = q.predict(samples)
         # Considering the inputs, this probably make no sense to test accuracy.
