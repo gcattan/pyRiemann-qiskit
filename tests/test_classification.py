@@ -20,32 +20,6 @@ class QuantumClassifierTestCase:
                                                 random)
         return samples, labels
 
-    def test_two_classes(self, classif, quantum, prepare_bin_data):
-        self.prepare_bin_data = prepare_bin_data
-        self.n_channels, self.n_classes = 3, 2
-        self.n_features = self.n_channels ** 2
-
-        if quantum:
-            self.clf_init_with_quantum_true(classif)
-        else:
-            self.clf_init_with_quantum_false(classif)
-
-        is_classic_svm = not quantum and classif is QuanticSVM
-        if quantum or is_classic_svm:
-            samples, labels = self.prepare_data(100)
-            self.clf_params(classif, samples, labels)
-            self.clf_split_classes(classif, samples, labels)
-
-        self.clf_fvt(classif, quantum)
-
-
-class BinaryClassifier(QuantumClassifierTestCase):
-    def clf_params(self, classif, samples, labels):
-        clf = make_pipeline(XdawnCovariances(), TangentSpace(),
-                            classif())
-        skf = StratifiedKFold(n_splits=5)
-        cross_val_score(clf, samples, labels, cv=skf, scoring='roc_auc')
-
     def clf_init_with_quantum_false(self, classif):
         if classif is QuanticVQC:
             with pytest.raises(ValueError):
@@ -75,6 +49,33 @@ class BinaryClassifier(QuantumClassifierTestCase):
         q = classif(quantum=True, q_account_token="Test")
         with pytest.raises(RequestsApiError):
             q._init_quantum()
+
+    def test_init(self, classif):
+        if quantum:
+            self.clf_init_with_quantum_true(classif)
+        else:
+            self.clf_init_with_quantum_false(classif)
+
+    def test_two_classes(self, classif, quantum, prepare_bin_data):
+        self.prepare_bin_data = prepare_bin_data
+        self.n_channels, self.n_classes = 3, 2
+        self.n_features = self.n_channels ** 2
+
+        is_classic_svm = not quantum and classif is QuanticSVM
+        if quantum or is_classic_svm:
+            samples, labels = self.prepare_data(100)
+            self.clf_params(classif, samples, labels)
+            self.clf_split_classes(classif, samples, labels)
+
+        self.clf_fvt(classif, quantum)
+
+
+class BinaryClassifier(QuantumClassifierTestCase):
+    def clf_params(self, classif, samples, labels):
+        clf = make_pipeline(XdawnCovariances(), TangentSpace(),
+                            classif())
+        skf = StratifiedKFold(n_splits=5)
+        cross_val_score(clf, samples, labels, cv=skf, scoring='roc_auc')
 
     def clf_split_classes(self, classif, samples, labels):
         """Test _split_classes method of quantum classifiers"""
