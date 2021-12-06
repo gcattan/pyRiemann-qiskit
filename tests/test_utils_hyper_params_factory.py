@@ -16,7 +16,8 @@ class TestZZFeatureMap(HyperParamsTestCase):
     )
     def test_gen_zz_feature_map_entangl_strings(self, entanglement):
         """Test gen_zz_feature_map with different
-           string options of entanglement"""
+        string options of entanglement
+        """
         handle = gen_zz_feature_map(entanglement=entanglement)
         feature_map = handle(self.n_features)
         assert isinstance(feature_map.parameters, set)
@@ -65,7 +66,8 @@ class TestTwoLocal(HyperParamsTestCase):
 
     def test_gen_two_local_list(self):
         """Test gen_two_local with a list as rotation
-           and entanglement blocks"""
+        and entanglement blocks
+        """
         rotation_blocks = ['cx', 'cz']
         entanglement_blocks = ['rx', 'rz']
         handle = gen_two_local(rotation_blocks=rotation_blocks,
