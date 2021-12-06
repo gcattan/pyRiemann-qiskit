@@ -50,7 +50,7 @@ class QuantumClassifierTestCase:
         with pytest.raises(RequestsApiError):
             q._init_quantum()
 
-    def test_init(self, classif):
+    def test_init(self, classif, quantum):
         if quantum:
             self.clf_init_with_quantum_true(classif)
         else:
@@ -70,7 +70,7 @@ class QuantumClassifierTestCase:
         self.clf_fvt(classif, quantum)
 
 
-class BinaryClassifier(QuantumClassifierTestCase):
+class TestBinaryClassifier(QuantumClassifierTestCase):
     def clf_params(self, classif, samples, labels):
         clf = make_pipeline(XdawnCovariances(), TangentSpace(),
                             classif())
