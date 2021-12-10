@@ -15,7 +15,7 @@ def test_mean_convex_all_zeros():
     n_trials, n_channels = 5, 2
     covmats = np.zeros((n_trials, n_channels, n_channels))
     C = fro_mean_convex(covmats)
-    assert np.allclose(covmats[0], C, atol=0.01)
+    assert np.allclose(covmats[0], C, atol=0.0001)
 
 
 def test_mean_convex_all_ones():
@@ -23,7 +23,7 @@ def test_mean_convex_all_ones():
     n_trials, n_channels = 5, 2
     covmats = np.ones((n_trials, n_channels, n_channels))
     C = fro_mean_convex(covmats)
-    assert np.allclose(covmats[0], C, atol=0.01)
+    assert np.allclose(covmats[0], C, atol=0.0001)
 
 
 def test_mean_convex_all_equals():
@@ -31,7 +31,7 @@ def test_mean_convex_all_equals():
     n_trials, n_channels, value = 5, 2, 2.5
     covmats = np.full((n_trials, n_channels, n_channels), value)
     C = fro_mean_convex(covmats)
-    assert np.allclose(covmats[0], C, atol=0.01)
+    assert np.allclose(covmats[0], C, atol=0.0001)
 
 
 def test_mean_convex_mixed():
@@ -41,4 +41,4 @@ def test_mean_convex_mixed():
     covmats_1 = np.ones((n_trials, n_channels, n_channels))
     expected_mean = np.full((n_channels, n_channels), 0.5)
     C = fro_mean_convex(np.concatenate((covmats_0, covmats_1), axis=0))
-    assert np.allclose(expected_mean, C, atol=0.01)
+    assert np.allclose(expected_mean, C, atol=0.0001)

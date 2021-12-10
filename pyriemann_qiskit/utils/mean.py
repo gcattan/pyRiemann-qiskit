@@ -37,7 +37,7 @@ def fro_mean_convex(covmats, sample_weight=None):
     qp = QuadraticProgram()
     qp.from_docplex(prob)
     
-    result = CobylaOptimizer().solve(qp)
+    result = CobylaOptimizer(rhobeg=0.01, rhoend=0.0001).solve(qp)
 
     return np.reshape(result.x, (n_channels, n_channels))
 
