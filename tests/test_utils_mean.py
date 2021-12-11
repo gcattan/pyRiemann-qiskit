@@ -1,7 +1,28 @@
 import numpy as np
 from pyriemann_qiskit.utils.mean import fro_mean_convex
-from pyriemann.utils.mean import mean_euclid
+from pyriemann.utils.mean import mean_euclid, mean_methods
 
+from pyriemann.classification import MDM
+from pyriemann.estimation import XdawnCovariances
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+
+def test_params(get_covmats, get_labels):
+    metric= {
+        'mean': "convex",
+        'distance': "euclid"
+    }
+    mean_methods["convex"] = fro_mean_convex
+
+    clf = make_pipeline(XdawnCovariances(), MDM(metric=metric))
+    skf = StratifiedKFold(n_splits=5)
+    n_matrices, n_channels, n_classes = 100, 3, 2
+    covset = get_covmats(n_matrices, n_channels)
+    labels = get_labels(n_matrices, n_classes)
+
+    score = cross_val_score(clf, covset, labels, cv=skf, scoring='roc_auc').mean()
+    assert score == 0
 
 def test_mean_convex_vs_euclid(get_covmats):
     """Test the shape of mean"""
