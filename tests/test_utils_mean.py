@@ -1,6 +1,7 @@
 import numpy as np
 from pyriemann_qiskit.utils.mean import fro_mean_convex
 from pyriemann.utils.mean import mean_euclid, mean_methods
+from pyriemann.utils.distance import distance_methods
 
 from pyriemann.classification import MDM
 from pyriemann.estimation import XdawnCovariances
@@ -8,12 +9,13 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 
 
-def test_params(get_covmats, get_labels):
+def test_performance(get_covmats, get_labels):
     metric= {
         'mean': "convex",
-        'distance': "euclid"
+        'distance': "convex"
     }
     mean_methods["convex"] = fro_mean_convex
+    distance_methods["convex"] = lambda A, B: np.linalg.norm(A - B, ord='fro')
 
     clf = make_pipeline(XdawnCovariances(), MDM(metric=metric))
     skf = StratifiedKFold(n_splits=5)
