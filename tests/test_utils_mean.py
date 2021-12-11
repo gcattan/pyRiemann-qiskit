@@ -1,5 +1,15 @@
 import numpy as np
 from pyriemann_qiskit.utils.mean import fro_mean_convex
+from pyriemann.utils.mean import mean_euclid
+
+
+def test_mean_convex_vs_euclid(get_covmats):
+    """Test the shape of mean"""
+    n_trials, n_channels = 5, 3
+    covmats = get_covmats(n_trials, n_channels)
+    C = fro_mean_convex(covmats)
+    C_euclid = mean_euclid(covmats)
+    assert np.allclose(C, C_euclid, atol=0.0001)
 
 
 def test_mean_convex_shape(get_covmats):
