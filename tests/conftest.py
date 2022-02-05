@@ -1,7 +1,8 @@
 import pytest
-from pytest import approx
 import numpy as np
 from functools import partial
+
+from pyriemann.datasets import make_covariances
 
 
 def requires_module(function, name, call=None):
@@ -23,20 +24,6 @@ requires_matplotlib = partial(requires_module, name="matplotlib")
 requires_seaborn = partial(requires_module, name="seaborn")
 
 
-def generate_cov(n_trials, n_channels, rs, return_params=False):
-    """Generate a set of covariances matrices for test purpose"""
-    diags = 2.0 + 0.1 * rs.randn(n_trials, n_channels)
-    A = 2 * rs.rand(n_channels, n_channels) - 1
-    A /= np.linalg.norm(A, axis=1)[:, np.newaxis]
-    covmats = np.empty((n_trials, n_channels, n_channels))
-    for i in range(n_trials):
-        covmats[i] = A @ np.diag(diags[i]) @ A.T
-    if return_params:
-        return covmats, diags, A
-    else:
-        return covmats
-
-
 @pytest.fixture
 def rndstate():
     return np.random.RandomState(1234)
@@ -44,169 +31,83 @@ def rndstate():
 
 @pytest.fixture
 def get_covmats(rndstate):
-    def _gen_cov(n_trials, n_chan):
-        return generate_cov(n_trials, n_chan, rndstate, return_params=False)
+    def _gen_cov(n_matrices, n_channels):
+        return make_covariances(n_matrices, n_channels, rndstate,
+                                return_params=False)
 
     return _gen_cov
 
 
 @pytest.fixture
 def get_covmats_params(rndstate):
-    def _gen_cov_params(n_trials, n_chan):
-        return generate_cov(n_trials, n_chan, rndstate, return_params=True)
+    def _gen_cov_params(n_matrices, n_channels):
+        return make_covariances(n_matrices, n_channels, rndstate,
+                                return_params=True)
 
     return _gen_cov_params
 
 
-@pytest.fixture
-def get_labels():
-    def _get_labels(n_trials, n_classes):
-        return np.arange(n_classes).repeat(n_trials // n_classes)
-
-    return _get_labels
+def _get_labels(n_matrices, n_classes):
+    return np.arange(n_classes).repeat(n_matrices // n_classes)
 
 
-def generate_feat(n_samples, n_features, rs):
+def _get_rand_feats(n_samples, n_features, rs):
     """Generate a set of n_features-dimensional samples for test purpose"""
-    return rs.rand(n_samples, n_features)
+    return rs.randn(n_samples, n_features)
+
+
+def _get_binary_feats(n_samples, n_features):
+    """Generate a balanced binary set of n_features-dimensional
+     samples for test purpose, containing either 0 or 1"""
+    n_classes = 2
+    class_len = n_samples // n_classes  # balanced set
+    samples_0 = np.zeros((class_len, n_features))
+    samples_1 = np.ones((class_len, n_features))
+    samples = np.concatenate((samples_0, samples_1), axis=0)
+    return samples
 
 
 @pytest.fixture
-def get_feats(rndstate):
-    def _gen_feat(n_samples, n_features):
-        return generate_feat(n_samples, n_features, rndstate)
-    return _gen_feat
+def get_dataset(rndstate):
+    # Note: the n_classes parameters might be misleading as it is only
+    # recognized by the _get_labels methods.
+    def _get_dataset(n_samples, n_features, n_classes, random=True):
+        if random:
+            samples = _get_rand_feats(n_samples, n_features, rndstate)
+        else:
+            samples = _get_binary_feats(n_samples, n_features)
+        labels = _get_labels(n_samples, n_classes)
+        return samples, labels
+    return _get_dataset
 
 
-def is_positive_semi_definite(X):
-    """Check if all matrices are positive semi-definite.
-
-    Parameters
-    ----------
-    X : ndarray, shape (..., n, n)
-        The set of square matrices, at least 2D ndarray.
-
-    Returns
-    -------
-    ret : boolean
-        True if all matrices are positive semi-definite.
-    """
-    cs = X.shape[-1]
-    return np.all(np.linalg.eigvals(X.reshape((-1, cs, cs))) >= 0.0)
+def _get_linear_entanglement(n_qbits_in_block, n_features):
+    return [list(range(i, i + n_qbits_in_block))
+            for i in range(n_features - n_qbits_in_block + 1)]
 
 
-def is_positive_definite(X):
-    """Check if all matrices are positive definite.
-
-    Parameters
-    ----------
-    X : ndarray, shape (..., n, n)
-        The set of square matrices, at least 2D ndarray.
-
-    Returns
-    -------
-    ret : boolean
-        True if all matrices are positive definite.
-    """
-    cs = X.shape[-1]
-    return np.all(np.linalg.eigvals(X.reshape((-1, cs, cs))) > 0.0)
-
-
-def is_symmetric(X):
-    """Check if all matrices are symmetric.
-
-    Parameters
-    ----------
-    X : ndarray, shape (..., n, n)
-        The set of square matrices, at least 2D ndarray.
-
-    Returns
-    -------
-    ret : boolean
-        True if all matrices are symmetric.
-    """
-    return X == approx(np.swapaxes(X, -2, -1))
+def _get_pauli_z_rep_linear_entanglement(n_features):
+    num_qubits_by_block = [1, 2]
+    indices_by_block = []
+    for n in num_qubits_by_block:
+        linear = _get_linear_entanglement(n, n_features)
+        indices_by_block.append(linear)
+    return indices_by_block
 
 
 @pytest.fixture
-def is_spd():
-    """Check if all matrices are symmetric positive-definite.
+def get_pauli_z_linear_entangl_handle():
+    def _get_pauli_z_linear_entangl_handle(n_features):
+        indices = _get_pauli_z_rep_linear_entanglement(n_features)
+        return lambda _: [indices]
 
-    Parameters
-    ----------
-    X : ndarray, shape (..., n, n)
-        The set of square matrices, at least 2D ndarray.
-
-    Returns
-    -------
-    ret : boolean
-        True if all matrices are symmetric positive-definite.
-    """
-
-    def _is_spd(X):
-        return is_symmetric(X) and is_positive_definite(X)
-
-    return _is_spd
+    return _get_pauli_z_linear_entangl_handle
 
 
 @pytest.fixture
-def is_spsd():
-    """Check if all matrices are symmetric positive semi-definite.
+def get_pauli_z_linear_entangl_idx():
+    def _get_pauli_z_linear_entangl_idx(reps, n_features):
+        indices = _get_pauli_z_rep_linear_entanglement(n_features)
+        return [indices for _ in range(reps)]
 
-    Parameters
-    ----------
-    X : ndarray, shape (..., n, n)
-        The set of square matrices, at least 2D ndarray.
-
-    Returns
-    -------
-    ret : boolean
-        True if all matrices are symmetric positive semi-definite.
-    """
-
-    def _is_spsd(X):
-        return is_symmetric(X) and is_positive_semi_definite(X)
-
-    return _is_spsd
-
-
-def get_distances():
-    distances = [
-        "riemann",
-        "logeuclid",
-        "euclid",
-        "logdet",
-        "kullback",
-        "kullback_right",
-        "kullback_sym",
-    ]
-    for dist in distances:
-        yield dist
-
-
-def get_means():
-    means = [
-        "riemann",
-        "logeuclid",
-        "euclid",
-        "logdet",
-        "identity",
-        "wasserstein",
-        "ale",
-        "harmonic",
-        "kullback_sym",
-    ]
-    for mean in means:
-        yield mean
-
-
-def get_metrics():
-    metrics = [
-        "riemann",
-        "logeuclid",
-        "euclid",
-        "logdet",
-        "kullback_sym",
-    ]
-    for met in metrics:
-        yield met
+    return _get_pauli_z_linear_entangl_idx
