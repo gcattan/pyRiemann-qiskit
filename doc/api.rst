@@ -45,3 +45,13 @@ Filtering
 
     NoDimRed
     NaiveDimRed
+
+Mean
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _mean_api:
+.. currentmodule:: pyriemann_qiskit.utils.mean
+
+.. autosummary::
+    :toctree: generated/
+
+    fro_mean_convex

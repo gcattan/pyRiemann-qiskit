@@ -2,7 +2,6 @@ import numpy as np
 from pyriemann_qiskit.utils.mean import fro_mean_convex
 from pyriemann.utils.mean import mean_euclid
 from pyriemann.utils.distance import distance_methods
-
 from pyriemann.classification import MDM
 from pyriemann.estimation import XdawnCovariances
 from sklearn.pipeline import make_pipeline
