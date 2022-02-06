@@ -55,3 +55,16 @@ Mean
     :toctree: generated/
 
     fro_mean_convex
+
+Docplex
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _docplex_api:
+.. currentmodule:: pyriemann_qiskit.utils.docplex
+
+.. autosummary::
+    :toctree: generated/
+
+    pyQiskitOptimizer
+    ClassicalOptimizer
+    NaiveQAOAOptimizer
+    CVQAOAOptimizer
