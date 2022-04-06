@@ -41,6 +41,7 @@ from moabb.evaluations import WithinSessionEvaluation
 from moabb.paradigms import P300
 from pyriemann_qiskit.classification import QuantumClassifierWithDefaultRiemannianPipeline
 
+print(__doc__)
 
 ##############################################################################
 # getting rid of the warnings about the future
