@@ -16,6 +16,7 @@ Classification
     QuanticClassifierBase
     QuanticSVM
     QuanticVQC
+    QuantumClassifierWithDefaultRiemannianPipeline
 
 
 Utils function
@@ -34,6 +35,7 @@ Hyper-parameters generation
     gen_zz_feature_map
     gen_two_local
     get_spsa
+    get_spsa_parameters
 
 Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +66,23 @@ Docplex
 .. autosummary::
     :toctree: generated/
 
+    square_cont_mat_var
+    square_int_mat_var
+    square_bin_mat_var
     pyQiskitOptimizer
     ClassicalOptimizer
     NaiveQAOAOptimizer
-    CVQAOAOptimizer
+
+Datasets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _datasets_api:
+.. currentmodule:: pyriemann_qiskit.datasets.utils
+
+.. autosummary::
+    :toctree: generated/
+
+    get_mne_sample
+    get_linearly_separable_dataset
+    get_qiskit_dataset
+    get_feature_dimension
+
