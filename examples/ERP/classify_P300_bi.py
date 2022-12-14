@@ -24,6 +24,7 @@ A list of real quantum  computers is available in your IBM quantum account.
 
 from pyriemann.estimation import XdawnCovariances
 from pyriemann.tangentspace import TangentSpace
+from pyriemann_qiskit.utils.firebase_connector import Cache
 from sklearn.pipeline import make_pipeline
 from matplotlib import pyplot as plt
 import warnings
@@ -104,6 +105,30 @@ pipelines["RG+LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),  # you can use other classifiers
 )
 
+# Create caches
+caches = {}
+
+all_results = {}
+for dataset in datasets:
+    subject_list: list = []
+    for subject in dataset.subject_list:
+        results = {}
+        for pipeline in pipelines:
+            cache = Cache(dataset.code, str(pipeline), {})
+            if(not dataset.code in caches):
+                caches[dataset.code] = {}
+            caches[dataset.code][str(pipeline)] = cache
+            try:
+                result = cache.get_result(subject)
+                results[subject] = {}
+                results[subject][str(pipeline)] = result
+            except:
+                subject_list.append(subject)
+                results = {}
+                break
+    all_results[dataset.code] = results
+    dataset.subject_list = subject_list
+
 print("Total pipelines to evaluate: ", len(pipelines))
 
 evaluation = WithinSessionEvaluation(
@@ -114,6 +139,16 @@ evaluation = WithinSessionEvaluation(
 )
 
 results = evaluation.process(pipelines)
+
+for dataset in datasets:
+    for subject in dataset.subject_list:
+        for pipeline in pipelines:
+            print(pipeline)
+            cache: Cache = caches[dataset.code][str(pipeline)]
+            record = results.where((results["dataset"] == dataset.code) & (results["subject"] == subject) & (results["pipeline"] == pipeline))
+            cache.add(subject, record["time"], record["score"])
+
+print(caches)
 
 print("Averaging the session performance:")
 print(results.groupby('pipeline').mean('score')[['score', 'time']])
@@ -136,10 +171,12 @@ sns.stripplot(
     zorder=1,
     palette="Set1",
 )
+
+print(results)
 sns.pointplot(data=results,
               y="score",
               x="pipeline",
-              ax=ax, zorder=1,
+              ax=ax,
               palette="Set1")
 
 ax.set_ylabel("ROC AUC")
