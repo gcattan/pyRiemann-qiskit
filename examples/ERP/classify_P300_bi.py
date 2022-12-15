@@ -67,7 +67,7 @@ datasets = [bi2012()]  # MOABB provides several other P300 datasets
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 5
+n_subjects = 2
 for dataset in datasets:
     dataset.subject_list = dataset.subject_list[0:n_subjects]
 
@@ -109,23 +109,27 @@ pipelines["RG+LDA"] = make_pipeline(
 caches = {}
 
 all_results = {}
+
 for dataset in datasets:
     subject_list: list = []
     for subject in dataset.subject_list:
         results = {}
         for pipeline in pipelines:
-            cache = Cache(dataset.code, str(pipeline), {})
+            print("--------------", pipeline)
+            cache = Cache(dataset.code, pipeline, {})
             if(not dataset.code in caches):
                 caches[dataset.code] = {}
-            caches[dataset.code][str(pipeline)] = cache
+            
+            caches[dataset.code][pipeline] = cache
             try:
                 result = cache.get_result(subject)
                 results[subject] = {}
-                results[subject][str(pipeline)] = result
+                results[subject][pipeline] = result
             except:
-                subject_list.append(subject)
+                if not subject_list.__contains__(subject) :
+                    subject_list.append(subject)
                 results = {}
-                break
+
     all_results[dataset.code] = results
     dataset.subject_list = subject_list
 
@@ -143,12 +147,11 @@ results = evaluation.process(pipelines)
 for dataset in datasets:
     for subject in dataset.subject_list:
         for pipeline in pipelines:
-            print(pipeline)
+            print(dataset.subject_list, pipeline, subject)
             cache: Cache = caches[dataset.code][str(pipeline)]
             record = results.where((results["dataset"] == dataset.code) & (results["subject"] == subject) & (results["pipeline"] == pipeline))
-            cache.add(subject, record["time"], record["score"])
-
-print(caches)
+            cache.add(str(subject), record["time"], record["score"])
+            print(cache)
 
 print("Averaging the session performance:")
 print(results.groupby('pipeline').mean('score')[['score', 'time']])
