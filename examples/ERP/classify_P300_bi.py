@@ -147,12 +147,13 @@ results = evaluation.process(pipelines)
 for dataset in datasets:
     for subject in dataset.subject_list:
         for pipeline in pipelines:
-            print(dataset.subject_list, pipeline, subject)
-            cache: Cache = caches[dataset.code][str(pipeline)]
-            record = results.where((results["dataset"] == dataset.code) & (results["subject"] == subject) & (results["pipeline"] == pipeline))
-            cache.add(str(subject), record["time"], record["score"])
-            print(cache)
+            # print(dataset.subject_list, pipeline, subject)
+            cache: Cache = caches[dataset.code][pipeline]
+            record = results.where((results["dataset"] == dataset.code) & (results["subject"] == str(subject)) & (results["pipeline"] == pipeline)).dropna()
+            # print(record["time"], record["score"])
+            cache.add(str(subject), record["time"].tolist()[0], record["score"].tolist()[0])
 
+print(caches)
 print("Averaging the session performance:")
 print(results.groupby('pipeline').mean('score')[['score', 'time']])
 
