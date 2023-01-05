@@ -110,6 +110,43 @@ caches = {}
 
 all_results = {}
 
+# {
+#    "Brain Invaders 2012":{
+#       "RG+QuantumSVM":{
+#          "Brain Invaders 2012":{
+#             "1":{
+#                "RG+QuantumSVM":{
+#                   "true_labels":0.3433986306190491,
+#                   "predicted_labels":0.5
+#                }
+#             },
+#             "2":{
+#                "RG+QuantumSVM":{
+#                   "true_labels":0.3245513439178467,
+#                   "predicted_labels":0.5479273200035095
+#                }
+#             }
+#          }
+#       },
+#       "RG+LDA":{
+#          "Brain Invaders 2012":{
+#             "1":{
+#                "RG+LDA":{
+#                   "true_labels":0.13163451850414276,
+#                   "predicted_labels":0.6777283549308777
+#                }
+#             },
+#             "2":{
+#                "RG+LDA":{
+#                   "true_labels":0.13357791304588318,
+#                   "predicted_labels":0.8143579959869385
+#                }
+#             }
+#          }
+#       }
+#    }
+# }
+
 for dataset in datasets:
     subject_list: list = []
     for subject in dataset.subject_list:

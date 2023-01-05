@@ -131,6 +131,12 @@ class FirebaseConnector():
         self : A representation of the database
         """
         return self._datasets
+    
+    def __repr__(self) -> str:
+        return str(self.datasets)
+
+    def __str__(self) -> str:
+        return repr(self)
 
 
 class Cache():
@@ -215,3 +221,9 @@ class Cache():
 
     def data(self):
         return self._connector.datasets
+    
+    def __repr__(self) -> str:
+        return str(self._connector)
+    
+    def __str__(self) -> str:
+        return repr(self)
