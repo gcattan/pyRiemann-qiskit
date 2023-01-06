@@ -110,42 +110,42 @@ caches = {}
 
 all_results = {}
 
-# {
-#    "Brain Invaders 2012":{
-#       "RG+QuantumSVM":{
-#          "Brain Invaders 2012":{
-#             "1":{
-#                "RG+QuantumSVM":{
-#                   "true_labels":0.3433986306190491,
-#                   "predicted_labels":0.5
-#                }
-#             },
-#             "2":{
-#                "RG+QuantumSVM":{
-#                   "true_labels":0.3245513439178467,
-#                   "predicted_labels":0.5479273200035095
-#                }
-#             }
-#          }
-#       },
-#       "RG+LDA":{
-#          "Brain Invaders 2012":{
-#             "1":{
-#                "RG+LDA":{
-#                   "true_labels":0.13163451850414276,
-#                   "predicted_labels":0.6777283549308777
-#                }
-#             },
-#             "2":{
-#                "RG+LDA":{
-#                   "true_labels":0.13357791304588318,
-#                   "predicted_labels":0.8143579959869385
-#                }
-#             }
-#          }
-#       }
-#    }
-# }
+fake = {
+   "Brain Invaders 2012":{
+      "RG+QuantumSVM":{
+         "Brain Invaders 2012":{
+            "1":{
+               "RG+QuantumSVM":{
+                  "true_labels":0.3433986306190491,
+                  "predicted_labels":0.5
+               }
+            },
+            "2":{
+               "RG+QuantumSVM":{
+                  "true_labels":0.3245513439178467,
+                  "predicted_labels":0.5479273200035095
+               }
+            }
+         }
+      },
+      "RG+LDA":{
+         "Brain Invaders 2012":{
+            "1":{
+               "RG+LDA":{
+                  "true_labels":0.13163451850414276,
+                  "predicted_labels":0.6777283549308777
+               }
+            },
+            "2":{
+               "RG+LDA":{
+                  "true_labels":0.13357791304588318,
+                  "predicted_labels":0.8143579959869385
+               }
+            }
+         }
+      }
+   }
+}
 
 for dataset in datasets:
     subject_list: list = []
@@ -153,13 +153,14 @@ for dataset in datasets:
         results = {}
         for pipeline in pipelines:
             print("--------------", pipeline)
-            cache = Cache(dataset.code, pipeline, {})
+            cache = Cache(dataset.code, pipeline, {}) # fake[dataset.code][pipeline]
+            print(cache)
             if(not dataset.code in caches):
                 caches[dataset.code] = {}
             
             caches[dataset.code][pipeline] = cache
             try:
-                result = cache.get_result(subject)
+                result = cache.get_result(str(subject))
                 results[subject] = {}
                 results[subject][pipeline] = result
             except:
@@ -171,7 +172,8 @@ for dataset in datasets:
     dataset.subject_list = subject_list
 
 print("Total pipelines to evaluate: ", len(pipelines))
-
+print(datasets[0].subject_list)
+exit(0)
 evaluation = WithinSessionEvaluation(
     paradigm=paradigm,
     datasets=datasets,
