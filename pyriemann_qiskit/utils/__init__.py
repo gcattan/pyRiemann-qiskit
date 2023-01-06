@@ -5,7 +5,13 @@ from .docplex import (square_cont_mat_var,
                       square_bin_mat_var,
                       ClassicalOptimizer,
                       NaiveQAOAOptimizer)
-from .firebase_connector import FirebaseConnector, Cache, generate_caches, filter_subjects_with_all_results, add_moabb_dataframe_results_to_caches
+from .firebase_connector import (
+        FirebaseConnector,
+        Cache,
+        generate_caches,
+        filter_subjects_with_all_results,
+        add_moabb_dataframe_results_to_caches
+    )
 
 __all__ = [
     'hyper_params_factory',
