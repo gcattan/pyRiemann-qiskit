@@ -229,11 +229,8 @@ class Cache():
         return repr(self)
 
 
-t_caches = dict[str, dict[str, Cache]]
-
-
 def generate_caches(datasets: list, pipelines: list):
-    caches: t_caches = {}
+    caches = {}
     for dataset in datasets:
         for pipeline in pipelines:
             cache = Cache(dataset.code, pipeline)
@@ -246,7 +243,7 @@ def generate_caches(datasets: list, pipelines: list):
 # Keep only subject with incomplete results in the datasets
 # (that is the reuslt for at least one pipeline is missing)
 # return a dictionnary of existing results
-def filter_subjects_with_all_results(caches: t_caches, datasets: list,
+def filter_subjects_with_all_results(caches, datasets: list,
                                      pipelines: list):
     all_results = {}
     for dataset in datasets:
@@ -270,7 +267,7 @@ def filter_subjects_with_all_results(caches: t_caches, datasets: list,
 
 
 def add_moabb_dataframe_results_to_caches(df_results, datasets: list,
-                                          pipelines: list, caches: t_caches):
+                                          pipelines: list, caches):
     for dataset in datasets:
         for subject in dataset.subject_list:
             for pipeline in pipelines:
