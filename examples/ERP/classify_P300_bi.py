@@ -24,7 +24,7 @@ A list of real quantum  computers is available in your IBM quantum account.
 
 from pyriemann.estimation import XdawnCovariances
 from pyriemann.tangentspace import TangentSpace
-from pyriemann_qiskit.utils.firebase_connector import Cache
+from pyriemann_qiskit.utils import Cache, generate_caches, filter_subjects_with_all_results, add_moabb_dataframe_results_to_caches
 from sklearn.pipeline import make_pipeline
 from matplotlib import pyplot as plt
 import warnings
@@ -106,74 +106,51 @@ pipelines["RG+LDA"] = make_pipeline(
 )
 
 # Create caches
-caches = {}
+caches = generate_caches(datasets, pipelines)
 
 all_results = {}
 
-fake = {
-   "Brain Invaders 2012":{
-      "RG+QuantumSVM":{
-         "Brain Invaders 2012":{
-            "1":{
-               "RG+QuantumSVM":{
-                  "true_labels":0.3433986306190491,
-                  "predicted_labels":0.5
-               }
-            },
-            "2":{
-               "RG+QuantumSVM":{
-                  "true_labels":0.3245513439178467,
-                  "predicted_labels":0.5479273200035095
-               }
-            }
-         }
-      },
-      "RG+LDA":{
-         "Brain Invaders 2012":{
-            "1":{
-               "RG+LDA":{
-                  "true_labels":0.13163451850414276,
-                  "predicted_labels":0.6777283549308777
-               }
-            },
-            "2":{
-               "RG+LDA":{
-                  "true_labels":0.13357791304588318,
-                  "predicted_labels":0.8143579959869385
-               }
-            }
-         }
-      }
-   }
-}
+# fake = {
+#    "Brain Invaders 2012":{
+#       "RG+QuantumSVM":{
+#          "Brain Invaders 2012":{
+#             "1":{
+#                "RG+QuantumSVM":{
+#                   "true_labels":0.3433986306190491,
+#                   "predicted_labels":0.5
+#                }
+#             },
+#             "2":{
+#                "RG+QuantumSVM":{
+#                   "true_labels":0.3245513439178467,
+#                   "predicted_labels":0.5479273200035095
+#                }
+#             }
+#          }
+#       },
+#       "RG+LDA":{
+#          "Brain Invaders 2012":{
+#             "1":{
+#                "RG+LDA":{
+#                   "true_labels":0.13163451850414276,
+#                   "predicted_labels":0.6777283549308777
+#                }
+#             },
+#             "2":{
+#                "RG+LDA":{
+#                   "true_labels":0.13357791304588318,
+#                   "predicted_labels":0.8143579959869385
+#                }
+#             }
+#          }
+#       }
+#    }
+# }
 
-for dataset in datasets:
-    subject_list: list = []
-    for subject in dataset.subject_list:
-        results = {}
-        for pipeline in pipelines:
-            print("--------------", pipeline)
-            cache = Cache(dataset.code, pipeline, {}) # fake[dataset.code][pipeline]
-            print(cache)
-            if(not dataset.code in caches):
-                caches[dataset.code] = {}
-            
-            caches[dataset.code][pipeline] = cache
-            try:
-                result = cache.get_result(str(subject))
-                results[subject] = {}
-                results[subject][pipeline] = result
-            except:
-                if not subject_list.__contains__(subject) :
-                    subject_list.append(subject)
-                results = {}
-
-    all_results[dataset.code] = results
-    dataset.subject_list = subject_list
+all_results = filter_subjects_with_all_results(caches, datasets, pipelines)
 
 print("Total pipelines to evaluate: ", len(pipelines))
-print(datasets[0].subject_list)
-exit(0)
+
 evaluation = WithinSessionEvaluation(
     paradigm=paradigm,
     datasets=datasets,
@@ -183,14 +160,7 @@ evaluation = WithinSessionEvaluation(
 
 results = evaluation.process(pipelines)
 
-for dataset in datasets:
-    for subject in dataset.subject_list:
-        for pipeline in pipelines:
-            # print(dataset.subject_list, pipeline, subject)
-            cache: Cache = caches[dataset.code][pipeline]
-            record = results.where((results["dataset"] == dataset.code) & (results["subject"] == str(subject)) & (results["pipeline"] == pipeline)).dropna()
-            # print(record["time"], record["score"])
-            cache.add(str(subject), record["time"].tolist()[0], record["score"].tolist()[0])
+add_moabb_dataframe_results_to_caches(results, datasets, caches)
 
 print(caches)
 print("Averaging the session performance:")

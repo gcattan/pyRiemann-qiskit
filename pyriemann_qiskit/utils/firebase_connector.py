@@ -227,3 +227,48 @@ class Cache():
     
     def __str__(self) -> str:
         return repr(self)
+
+
+t_caches = dict[str, dict[str, Cache]]
+
+def generate_caches(datasets: list, pipelines: list):
+    caches: t_caches = {}
+    for dataset in datasets:
+        for pipeline in pipelines:
+            cache = Cache(dataset.code, pipeline)
+            if(not dataset.code in caches):
+                caches[dataset.code] = {}
+            caches[dataset.code][pipeline] = cache
+    return caches
+
+# Keep only subject with incomplete results in the datasets
+# (that is the reuslt for at least one pipeline is missing)
+# return a dictionnary of existing results
+def filter_subjects_with_all_results(caches: t_caches, datasets: list, pipelines: list):
+    all_results = {}
+    for dataset in datasets:
+        subject_list: list = []
+        for subject in dataset.subject_list:
+            results = {}
+            for pipeline in pipelines:
+                cache = caches[dataset.code][pipeline]
+                try:
+                    result = cache.get_result(str(subject))
+                    results[subject] = {}
+                    results[subject][pipeline] = result
+                except:
+                    if not subject_list.__contains__(subject) :
+                        subject_list.append(subject)
+                    results = {}
+
+        all_results[dataset.code] = results
+        dataset.subject_list = subject_list
+        return all_results
+
+def add_moabb_dataframe_results_to_caches(df_results, datasets: list, pipelines: list, caches: t_caches):
+    for dataset in datasets:
+        for subject in dataset.subject_list:
+            for pipeline in pipelines:
+                cache: Cache = caches[dataset.code][pipeline]
+                record = df_results.where((df_results["dataset"] == dataset.code) & (df_results["subject"] == str(subject)) & (df_results["pipeline"] == pipeline)).dropna()
+                cache.add(str(subject), record["time"].tolist()[0], record["score"].tolist()[0])
