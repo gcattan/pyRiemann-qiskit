@@ -24,7 +24,11 @@ A list of real quantum  computers is available in your IBM quantum account.
 
 from pyriemann.estimation import XdawnCovariances
 from pyriemann.tangentspace import TangentSpace
-from pyriemann_qiskit.utils import Cache, generate_caches, filter_subjects_with_all_results, add_moabb_dataframe_results_to_caches
+from pyriemann_qiskit.utils import (
+        generate_caches,
+        filter_subjects_with_all_results,
+        add_moabb_dataframe_results_to_caches
+    )
 from sklearn.pipeline import make_pipeline
 from matplotlib import pyplot as plt
 import warnings
