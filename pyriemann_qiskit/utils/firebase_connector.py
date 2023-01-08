@@ -233,7 +233,7 @@ def generate_caches(datasets: list, pipelines: list, mock_data=None):
     caches = {}
     for dataset in datasets:
         for pipeline in pipelines:
-            cache = Cache(dataset.code, pipeline, mock_data[dataset.code][pipeline])
+            cache = Cache(dataset.code, pipeline, mock_data[dataset.code][pipeline] if mock_data is not None else None)
             if (dataset.code not in caches):
                 caches[dataset.code] = {}
             caches[dataset.code][pipeline] = cache

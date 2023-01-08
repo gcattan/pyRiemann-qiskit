@@ -147,7 +147,7 @@ fake = {
 }
 
 # Create caches
-caches = generate_caches(datasets, pipelines, fake)
+caches = generate_caches(datasets, pipelines, None)
 
 all_results = {}
 
@@ -169,6 +169,8 @@ evaluation = WithinSessionEvaluation(
 results = evaluation.process(pipelines)
 
 add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
+
+# TODO: convert caches to moabb dataframe
 
 print(caches)
 print("Averaging the session performance:")
