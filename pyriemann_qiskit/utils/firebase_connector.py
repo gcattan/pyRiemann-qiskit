@@ -229,11 +229,11 @@ class Cache():
         return repr(self)
 
 
-def generate_caches(datasets: list, pipelines: list):
+def generate_caches(datasets: list, pipelines: list, mock_data=None):
     caches = {}
     for dataset in datasets:
         for pipeline in pipelines:
-            cache = Cache(dataset.code, pipeline)
+            cache = Cache(dataset.code, pipeline, mock_data[dataset.code][pipeline])
             if (dataset.code not in caches):
                 caches[dataset.code] = {}
             caches[dataset.code][pipeline] = cache
@@ -260,10 +260,11 @@ def filter_subjects_with_all_results(caches, datasets: list,
                     if not subject_list.__contains__(subject):
                         subject_list.append(subject)
                     results = {}
-
-        all_results[dataset.code] = results
+            if len(results) > 0:
+                all_results[dataset.code] = all_results[dataset.code] if dataset.code in all_results else {}
+                all_results[dataset.code][subject] = results[subject]
         dataset.subject_list = subject_list
-        return all_results
+    return all_results
 
 
 def add_moabb_dataframe_results_to_caches(df_results, datasets: list,

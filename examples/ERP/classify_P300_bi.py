@@ -109,50 +109,53 @@ pipelines["RG+LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),  # you can use other classifiers
 )
 
+fake = {
+   "Brain Invaders 2012":{
+      "RG+QuantumSVM":{
+         "Brain Invaders 2012":{
+            "1":{
+               "RG+QuantumSVM":{
+                  "true_labels":0.3433986306190491,
+                  "predicted_labels":0.5
+               }
+            },
+            "2":{
+               "RG+QuantumSVM":{
+                  "true_labels":0.3245513439178467,
+                  "predicted_labels":0.5479273200035095
+               }
+            }
+         }
+      },
+      "RG+LDA":{
+         "Brain Invaders 2012":{
+            "1":{
+               "RG+LDA":{
+                  "true_labels":0.13163451850414276,
+                  "predicted_labels":0.6777283549308777
+               }
+            },
+            "2":{
+               "RG+LDA":{
+                  "true_labels":0.13357791304588318,
+                  "predicted_labels":0.8143579959869385
+               }
+            }
+         }
+      }
+   }
+}
+
 # Create caches
-caches = generate_caches(datasets, pipelines)
+caches = generate_caches(datasets, pipelines, fake)
 
 all_results = {}
 
-# fake = {
-#    "Brain Invaders 2012":{
-#       "RG+QuantumSVM":{
-#          "Brain Invaders 2012":{
-#             "1":{
-#                "RG+QuantumSVM":{
-#                   "true_labels":0.3433986306190491,
-#                   "predicted_labels":0.5
-#                }
-#             },
-#             "2":{
-#                "RG+QuantumSVM":{
-#                   "true_labels":0.3245513439178467,
-#                   "predicted_labels":0.5479273200035095
-#                }
-#             }
-#          }
-#       },
-#       "RG+LDA":{
-#          "Brain Invaders 2012":{
-#             "1":{
-#                "RG+LDA":{
-#                   "true_labels":0.13163451850414276,
-#                   "predicted_labels":0.6777283549308777
-#                }
-#             },
-#             "2":{
-#                "RG+LDA":{
-#                   "true_labels":0.13357791304588318,
-#                   "predicted_labels":0.8143579959869385
-#                }
-#             }
-#          }
-#       }
-#    }
-# }
-
 all_results = filter_subjects_with_all_results(caches, datasets, pipelines)
 
+print(all_results)
+print(datasets[0].subject_list)
+exit(0)
 print("Total pipelines to evaluate: ", len(pipelines))
 
 evaluation = WithinSessionEvaluation(
