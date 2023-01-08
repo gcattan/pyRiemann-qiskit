@@ -254,13 +254,13 @@ def filter_subjects_with_all_results(caches, datasets: list,
                 cache = caches[dataset.code][pipeline]
                 try:
                     result = cache.get_result(str(subject))
-                    results[subject] = {}
+                    results[subject] = results[subject] if subject in results else {}
                     results[subject][pipeline] = result
                 except Exception:
                     if not subject_list.__contains__(subject):
                         subject_list.append(subject)
                     results = {}
-            if len(results) > 0:
+            if subject in results and len(results[subject]) == len(pipelines):
                 all_results[dataset.code] = all_results[dataset.code] if dataset.code in all_results else {}
                 all_results[dataset.code][subject] = results[subject]
         dataset.subject_list = subject_list

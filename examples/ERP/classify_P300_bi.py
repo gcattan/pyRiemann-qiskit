@@ -119,22 +119,22 @@ fake = {
                   "predicted_labels":0.5
                }
             },
-            "2":{
-               "RG+QuantumSVM":{
-                  "true_labels":0.3245513439178467,
-                  "predicted_labels":0.5479273200035095
-               }
-            }
+            # "2":{
+            #    "RG+QuantumSVM":{
+            #       "true_labels":0.3245513439178467,
+            #       "predicted_labels":0.5479273200035095
+            #    }
+            # }
          }
       },
       "RG+LDA":{
          "Brain Invaders 2012":{
-            "1":{
-               "RG+LDA":{
-                  "true_labels":0.13163451850414276,
-                  "predicted_labels":0.6777283549308777
-               }
-            },
+            # "1":{
+            #    "RG+LDA":{
+            #       "true_labels":0.13163451850414276,
+            #       "predicted_labels":0.6777283549308777
+            #    }
+            # },
             "2":{
                "RG+LDA":{
                   "true_labels":0.13357791304588318,
@@ -192,7 +192,7 @@ sns.stripplot(
     palette="Set1",
 )
 
-print(results)
+print(caches)
 sns.pointplot(data=results,
               y="score",
               x="pipeline",
