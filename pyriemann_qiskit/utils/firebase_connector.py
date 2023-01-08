@@ -277,6 +277,9 @@ def add_moabb_dataframe_results_to_caches(df_results, datasets: list,
                     (df_results["dataset"] == dataset.code) &
                     (df_results["subject"] == str(subject)) &
                     (df_results["pipeline"] == pipeline)).dropna()
-                cache.add(str(subject),
-                          record["time"].tolist()[0],
-                          record["score"].tolist()[0])
+                try:
+                    cache.add(str(subject),
+                            record["time"].tolist()[0],
+                            record["score"].tolist()[0])
+                except KeyError:
+                    print("Key already existed. Skipping.")

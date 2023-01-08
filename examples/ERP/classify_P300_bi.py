@@ -129,12 +129,12 @@ fake = {
       },
       "RG+LDA":{
          "Brain Invaders 2012":{
-            # "1":{
-            #    "RG+LDA":{
-            #       "true_labels":0.13163451850414276,
-            #       "predicted_labels":0.6777283549308777
-            #    }
-            # },
+            "1":{
+               "RG+LDA":{
+                  "true_labels":0.13163451850414276,
+                  "predicted_labels":0.6777283549308777
+               }
+            },
             "2":{
                "RG+LDA":{
                   "true_labels":0.13357791304588318,
@@ -155,7 +155,8 @@ all_results = filter_subjects_with_all_results(caches, datasets, pipelines)
 
 print(all_results)
 print(datasets[0].subject_list)
-exit(0)
+# print(caches)
+# exit(0)
 print("Total pipelines to evaluate: ", len(pipelines))
 
 evaluation = WithinSessionEvaluation(
@@ -167,7 +168,7 @@ evaluation = WithinSessionEvaluation(
 
 results = evaluation.process(pipelines)
 
-add_moabb_dataframe_results_to_caches(results, datasets, caches)
+add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
 
 print(caches)
 print("Averaging the session performance:")
