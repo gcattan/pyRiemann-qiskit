@@ -41,6 +41,7 @@ from moabb.paradigms import P300
 from pyriemann_qiskit.classification import \
     QuantumClassifierWithDefaultRiemannianPipeline
 from sklearn.decomposition import PCA
+import pandas as pd
 
 print(__doc__)
 
@@ -147,7 +148,7 @@ fake = {
 }
 
 # Create caches
-caches = generate_caches(datasets, pipelines, None)
+caches = generate_caches(datasets, pipelines, fake)
 
 all_results = {}
 
@@ -173,6 +174,31 @@ add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
 # TODO: convert caches to moabb dataframe
 
 print(caches)
+
+print("-----------------")
+
+rows_list = []
+for d in datasets:
+    for p in pipelines:
+        for s in d.subject_list:
+            time, score = caches[d.code][p].get_result(str(s))
+            new_row = {
+                'pipeline': p,
+                'dataset': d.code,
+                'subject': str(s),
+                'score': score,
+                'time': time
+            }
+            # df.reset_index(inplace=True, drop=True)
+            # df = df.append(new_row, ignore_index=True)
+            rows_list.append(new_row)
+# df = pd.DataFrame(columns=('pipeline', 'score', 'dataset', 'score', 'time'))
+df = pd.DataFrame(rows_list)
+
+print(df.groupby('pipeline').mean('score')[['score', 'time']])
+# print(results)
+# print(pd.DataFrame.from_dict(caches))
+
 print("Averaging the session performance:")
 print(results.groupby('pipeline').mean('score')[['score', 'time']])
 
