@@ -27,7 +27,8 @@ from pyriemann.tangentspace import TangentSpace
 from pyriemann_qiskit.utils import (
         generate_caches,
         filter_subjects_with_all_results,
-        add_moabb_dataframe_results_to_caches
+        add_moabb_dataframe_results_to_caches,
+        convert_caches_to_dataframes
     )
 from sklearn.pipeline import make_pipeline
 from matplotlib import pyplot as plt
@@ -171,29 +172,12 @@ results = evaluation.process(pipelines)
 
 add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
 
-# TODO: convert caches to moabb dataframe
 
 print(caches)
 
 print("-----------------")
 
-rows_list = []
-for d in datasets:
-    for p in pipelines:
-        for s in d.subject_list:
-            time, score = caches[d.code][p].get_result(str(s))
-            new_row = {
-                'pipeline': p,
-                'dataset': d.code,
-                'subject': str(s),
-                'score': score,
-                'time': time
-            }
-            # df.reset_index(inplace=True, drop=True)
-            # df = df.append(new_row, ignore_index=True)
-            rows_list.append(new_row)
-# df = pd.DataFrame(columns=('pipeline', 'score', 'dataset', 'score', 'time'))
-df = pd.DataFrame(rows_list)
+df = convert_caches_to_dataframes(caches, datasets, pipelines)
 
 print(df.groupby('pipeline').mean('score')[['score', 'time']])
 # print(results)

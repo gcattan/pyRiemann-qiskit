@@ -10,7 +10,8 @@ from .firebase_connector import (
         Cache,
         generate_caches,
         filter_subjects_with_all_results,
-        add_moabb_dataframe_results_to_caches
+        add_moabb_dataframe_results_to_caches,
+        convert_caches_to_dataframes
     )
 
 __all__ = [
@@ -26,5 +27,6 @@ __all__ = [
     'Cache',
     'generate_caches',
     'filter_subjects_with_all_results',
-    'add_moabb_dataframe_results_to_caches'
+    'add_moabb_dataframe_results_to_caches',
+    'convert_caches_to_dataframes'
 ]

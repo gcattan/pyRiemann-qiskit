@@ -1,5 +1,6 @@
 import firebase_admin
 import os
+import pandas as pd
 from warnings import warn
 try:
     from firebase_admin import credentials, firestore
@@ -283,3 +284,20 @@ def add_moabb_dataframe_results_to_caches(df_results, datasets: list,
                             record["score"].tolist()[0])
                 except KeyError:
                     print("Key already existed. Skipping.")
+
+def convert_caches_to_dataframes(caches, datasets, pipelines):
+    rows_list = []
+    for d in datasets:
+        for p in pipelines:
+            for s in d.subject_list:
+                time, score = caches[d.code][p].get_result(str(s))
+                new_row = {
+                    'pipeline': p,
+                    'dataset': d.code,
+                    'subject': str(s),
+                    'score': score,
+                    'time': time
+                }
+                rows_list.append(new_row)
+    df = pd.DataFrame(rows_list)
+    return df
