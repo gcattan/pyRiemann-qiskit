@@ -149,7 +149,7 @@ fake = {
 }
 
 # Create caches
-caches = generate_caches(datasets, pipelines)
+caches = generate_caches(datasets, pipelines, fake)
 
 all_results = {}
 
@@ -179,12 +179,13 @@ print("-----------------")
 
 df = convert_caches_to_dataframes(caches, datasets, pipelines)
 
+print("Averaging the session performance:")
 print(df.groupby('pipeline').mean('score')[['score', 'time']])
 # print(results)
 # print(pd.DataFrame.from_dict(caches))
 
-print("Averaging the session performance:")
-print(results.groupby('pipeline').mean('score')[['score', 'time']])
+
+# print(results.groupby('pipeline').mean('score')[['score', 'time']])
 
 ##############################################################################
 # Plot Results
@@ -195,7 +196,7 @@ print(results.groupby('pipeline').mean('score')[['score', 'time']])
 fig, ax = plt.subplots(facecolor="white", figsize=[8, 4])
 
 sns.stripplot(
-    data=results,
+    data=df,
     y="score",
     x="pipeline",
     ax=ax,
@@ -206,7 +207,7 @@ sns.stripplot(
 )
 
 print(caches)
-sns.pointplot(data=results,
+sns.pointplot(data=df,
               y="score",
               x="pipeline",
               ax=ax,
