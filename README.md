@@ -23,7 +23,7 @@ this could be an interesting research direction to investigate BCI illiteracy.
 
 pyRiemann-qiskit implements a wrapper around QSVC and VQC, to use quantum
 classification with Riemannian geometry. A use case would be to use vectorized
-covariance matrices in the TangentSpace as an input for these classifiers,
+covariance matrices in the tangent space as an input for these classifiers,
 enabling a possible sandbox for researchers and engineers in the field.
 
 The remaining details some of the quantum drawbacks and will guide you through installation.
@@ -80,8 +80,14 @@ _We recommend the use of [Anaconda](https://www.anaconda.com/) to manage python 
 
 `pyRiemann-qiskit` currently supports Windows, Mac and Linux OS with Python 3.7, 3.8 and 3.9.
 
-As there is no stable version, you should clone this repository
-and install the package on your local machine using the `setup.py` script
+You can install `pyRiemann-qiskit` release from PyPI:
+
+```
+pip install pyriemann-qiskit
+```
+
+The development version can be installed by cloning this repository
+and installing the package on your local machine using the `setup.py` script:
 
 ```
 python setup.py develop
