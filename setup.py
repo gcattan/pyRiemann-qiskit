@@ -40,7 +40,7 @@ setup(name='pyriemann-qiskit',
                         'cvxpy==1.3.0',
                         'scipy==1.7.3',
                         'docplex>=2.21.207',
-                        'firebase_admin==6.0.1',
+                        'firebase_admin==6.1.0',
                         'tqdm'
                         ],
       extras_require={'docs': ['sphinx-gallery', 'sphinx-bootstrap_theme', 'numpydoc', 'mne', 'seaborn', 'moabb>=0.4.6'],
