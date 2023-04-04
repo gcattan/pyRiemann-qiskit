@@ -73,7 +73,7 @@ datasets = [bi2012()]  # MOABB provides several other P300 datasets
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 2
+n_subjects = 5
 for dataset in datasets:
     dataset.subject_list = dataset.subject_list[0:n_subjects]
 
@@ -111,54 +111,12 @@ pipelines["RG+LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),  # you can use other classifiers
 )
 
-fake = {
-   "Brain Invaders 2012":{
-      "RG+QuantumSVM":{
-         "Brain Invaders 2012":{
-            "1":{
-               "RG+QuantumSVM":{
-                  "true_labels":0.3433986306190491,
-                  "predicted_labels":0.5
-               }
-            },
-            # "2":{
-            #    "RG+QuantumSVM":{
-            #       "true_labels":0.3245513439178467,
-            #       "predicted_labels":0.5479273200035095
-            #    }
-            # }
-         }
-      },
-      "RG+LDA":{
-         "Brain Invaders 2012":{
-            "1":{
-               "RG+LDA":{
-                  "true_labels":0.13163451850414276,
-                  "predicted_labels":0.6777283549308777
-               }
-            },
-            "2":{
-               "RG+LDA":{
-                  "true_labels":0.13357791304588318,
-                  "predicted_labels":0.8143579959869385
-               }
-            }
-         }
-      }
-   }
-}
-
-# Create caches
 caches = generate_caches(datasets, pipelines)
 
-all_results = {}
+# This method remove a subject in a dataset if we already have evaluated
+# all pipelines for this subject.
+filter_subjects_with_all_results(caches, datasets, pipelines)
 
-all_results = filter_subjects_with_all_results(caches, datasets, pipelines)
-
-print(all_results)
-print(datasets[0].subject_list)
-# print(caches)
-# exit(0)
 print("Total pipelines to evaluate: ", len(pipelines))
 
 evaluation = WithinSessionEvaluation(
@@ -172,20 +130,10 @@ results = evaluation.process(pipelines)
 
 add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
 
-
-print(caches)
-
-print("-----------------")
-
 df = convert_caches_to_dataframes(caches, datasets, pipelines)
 
 print("Averaging the session performance:")
 print(df.groupby('pipeline').mean('score')[['score', 'time']])
-# print(results)
-# print(pd.DataFrame.from_dict(caches))
-
-
-# print(results.groupby('pipeline').mean('score')[['score', 'time']])
 
 ##############################################################################
 # Plot Results
@@ -206,7 +154,6 @@ sns.stripplot(
     palette="Set1",
 )
 
-print(caches)
 sns.pointplot(data=df,
               y="score",
               x="pipeline",
