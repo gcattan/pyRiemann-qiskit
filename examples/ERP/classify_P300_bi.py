@@ -111,6 +111,8 @@ pipelines["RG+LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),  # you can use other classifiers
 )
 
+# We cache the results on Firebase. 
+# But you can skip all cache functions bellow if you want
 caches = generate_caches(datasets, pipelines)
 
 # This method remove a subject in a dataset if we already have evaluated
