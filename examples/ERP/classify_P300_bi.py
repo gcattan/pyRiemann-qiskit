@@ -42,7 +42,6 @@ from moabb.paradigms import P300
 from pyriemann_qiskit.classification import \
     QuantumClassifierWithDefaultRiemannianPipeline
 from sklearn.decomposition import PCA
-import pandas as pd
 
 print(__doc__)
 
@@ -111,8 +110,8 @@ pipelines["RG+LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),  # you can use other classifiers
 )
 
-# We cache the results on Firebase. 
-# But you can skip all cache functions bellow if you want
+# We cache the results on Firebase.
+# But you can skip all cache functions bellow if you want.
 caches = generate_caches(datasets, pipelines)
 
 # This method remove a subject in a dataset if we already have evaluated
