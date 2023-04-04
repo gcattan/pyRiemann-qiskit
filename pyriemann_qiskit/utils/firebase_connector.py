@@ -59,7 +59,8 @@ class FirebaseConnector():
             try:
                 cred = credentials.Certificate(certificate)
             except ValueError:
-                certificate["private_key"] = certificate["private_key"].replace("\\n", "\n")
+                certificate["private_key"] = \
+                    certificate["private_key"].replace("\\n", "\n")
                 cred = credentials.Certificate(certificate)
         except ValueError:
             env_certificate = eval(os.environ["FIREBASE_CERTIFICATE"])
@@ -253,7 +254,7 @@ def generate_caches(datasets: list, pipelines: list, mock_data=None):
     See Also
     --------
     FirebaseConnector
-        
+
     Return
     --------
     caches: Dict
@@ -270,7 +271,9 @@ def generate_caches(datasets: list, pipelines: list, mock_data=None):
         for pipeline in pipelines:
             cache = Cache(dataset.code,
                           pipeline,
-                          mock_data[dataset.code][pipeline] if mock_data is not None else None)
+                          mock_data[dataset.code][pipeline]
+                          if mock_data is not None
+                          else None)
             if (dataset.code not in caches):
                 caches[dataset.code] = {}
             caches[dataset.code][pipeline] = cache
@@ -282,7 +285,6 @@ def filter_subjects_with_all_results(caches, datasets: list,
     """
     Keep only subject with incomplete results in the datasets
     (that is the reuslt for at least one pipeline is missing).
-    return 
 
     Parameters
     ----------
@@ -313,14 +315,18 @@ def filter_subjects_with_all_results(caches, datasets: list,
                 cache = caches[dataset.code][pipeline]
                 try:
                     result = cache.get_result(str(subject))
-                    results[subject] = results[subject] if subject in results else {}
+                    results[subject] = \
+                        results[subject] if subject in results else {}
                     results[subject][pipeline] = result
                 except Exception:
                     if not subject_list.__contains__(subject):
                         subject_list.append(subject)
                     results = {}
-            if subject in results and len(results[subject]) == len(pipelines):
-                all_results[dataset.code] = all_results[dataset.code] if dataset.code in all_results else {}
+            if subject in results and \
+               len(results[subject]) == len(pipelines):
+                all_results[dataset.code] = all_results[dataset.code] \
+                    if dataset.code in all_results \
+                    else {}
                 all_results[dataset.code][subject] = results[subject]
         dataset.subject_list = subject_list
     return all_results
@@ -329,8 +335,8 @@ def filter_subjects_with_all_results(caches, datasets: list,
 def add_moabb_dataframe_results_to_caches(df_results, datasets: list,
                                           pipelines: list, caches):
     """
-    Add MOABB dataframe results, such as the one which is returned by `WithinSessionEvaluation.process`
-    to the caches.
+    Add MOABB dataframe results, such as the one which
+    is returned by `WithinSessionEvaluation.process` to the caches.
 
     Parameters
     ----------
@@ -359,8 +365,8 @@ def add_moabb_dataframe_results_to_caches(df_results, datasets: list,
                     (df_results["pipeline"] == pipeline)).dropna()
                 try:
                     cache.add(str(subject),
-                            record["time"].tolist()[0],
-                            record["score"].tolist()[0])
+                              record["time"].tolist()[0],
+                              record["score"].tolist()[0])
                 except KeyError:
                     print("Key already existed. Skipping.")
 
