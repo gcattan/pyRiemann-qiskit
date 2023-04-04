@@ -149,7 +149,7 @@ fake = {
 }
 
 # Create caches
-caches = generate_caches(datasets, pipelines, fake)
+caches = generate_caches(datasets, pipelines)
 
 all_results = {}
 
