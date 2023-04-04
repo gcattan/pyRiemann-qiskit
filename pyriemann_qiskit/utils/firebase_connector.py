@@ -56,11 +56,18 @@ class FirebaseConnector():
             return
         cred = None
         try:
-            cred = credentials.Certificate(certificate)
+            try:
+                cred = credentials.Certificate(certificate)
+            except ValueError:
+                certificate["private_key"] = certificate["private_key"].replace("\\n", "\n")
+                cred = credentials.Certificate(certificate)
         except ValueError:
             env_certificate = eval(os.environ["FIREBASE_CERTIFICATE"])
             cred = credentials.Certificate(env_certificate)
-        firebase_admin.initialize_app(cred)
+        try:
+            firebase_admin.initialize_app(cred)
+        except ValueError:
+            print("Firebase App already initialized. Skipping.")
         self._db = firestore.client()
 
     def _read_stream(self):
