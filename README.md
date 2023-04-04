@@ -73,6 +73,9 @@ The repository also includes a [wiki](https://github.com/pyRiemann/pyRiemann-qis
 	NTB Berlin 2022 - International Forum on Neural Engineering & Brain Technologies, May 2022, Berlin, Germany,
 	hal: https://hal.archives-ouvertes.fr/hal-03672246/
 
+### How to cite?
+
+Anton Andreev, Grégoire Cattan, Sylvain Chevallier, and Quentin Barthélemy. ‘PyRiemann-Qiskit: A Sandbox for Quantum Classification Experiments with Riemannian Geometry’. Research Ideas and Outcomes 9 (20 March 2023). https://doi.org/10.3897/rio.9.e101006.
 
 ## Installation
 
@@ -172,4 +175,24 @@ There is a known issue when you install `pyRiemann-qiskit` in an environement wh
 ```
 pip uninstall pyriemann
 pip install pyriemann@git+https://github.com/pyRiemann/pyRiemann#egg=pyriemann
+```
+
+## Firebase admin not loading
+In some environment, the firebase admin module is not loaded. There is two reasons:
+1) The protobuf package is missing an `__init__.py` file. You can fix this issue by adding it manually as it is done in the DockerFile:
+
+```
+touch /usr/local/lib/python3.8/site-packages/protobuf-4.22.1-py3.8-linux-x86_64.egg/google/__init__.py
+```
+
+2) The Firestore service contains unused dependency to `google.cloud.location`. You can fix this issue by removing the dependencies manually,
+as it is done in the DockerFile too:
+
+```
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/client.py'
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/transports/base.py'
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/transports/grpc.py'
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/transports/grpc_asyncio.py'
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/transports/rest.py'
+sed -i 's/from google.cloud.location import locations_pb2//g' '/usr/local/lib/python3.8/site-packages/google_cloud_firestore-2.10.1-py3.8.egg/google/cloud/firestore_v1/services/firestore/async_client.py'
 ```
