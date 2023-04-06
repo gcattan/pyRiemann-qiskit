@@ -73,7 +73,7 @@ copy_datasets = [bi2012()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 3
+n_subjects = 5
 for dataset, copy_dataset in zip(datasets, copy_datasets):
     dataset.subject_list = dataset.subject_list[0:n_subjects]
     copy_dataset.subject_list = copy_dataset.subject_list[0:n_subjects]
