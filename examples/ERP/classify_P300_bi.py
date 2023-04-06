@@ -69,12 +69,14 @@ labels_dict = {"Target": 1, "NonTarget": 0}
 paradigm = P300(resample=128)
 
 datasets = [bi2012()]  # MOABB provides several other P300 datasets
+copy_datasets = [bi2012()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 5
-for dataset in datasets:
+n_subjects = 3
+for dataset, copy_dataset in zip(datasets, copy_datasets):
     dataset.subject_list = dataset.subject_list[0:n_subjects]
+    copy_dataset.subject_list = copy_dataset.subject_list[0:n_subjects]
 
 overwrite = True  # set to True if we want to overwrite cached results
 
@@ -116,20 +118,27 @@ caches = generate_caches(datasets, pipelines)
 
 # This method remove a subject in a dataset if we already have evaluated
 # all pipelines for this subject.
-filter_subjects_with_all_results(caches, datasets, pipelines)
+# Therefore we will use a copy of the original datasets.
+filter_subjects_with_all_results(caches, copy_datasets, pipelines)
 
 print("Total pipelines to evaluate: ", len(pipelines))
-
+print("Subjects to evaluate",
+      sum([len(dataset.subject_list) for dataset in copy_datasets]))
 evaluation = WithinSessionEvaluation(
     paradigm=paradigm,
-    datasets=datasets,
+    datasets=copy_datasets,
     suffix="examples",
     overwrite=overwrite
 )
 
-results = evaluation.process(pipelines)
-
-add_moabb_dataframe_results_to_caches(results, datasets, pipelines, caches)
+try:
+    results = evaluation.process(pipelines)
+    add_moabb_dataframe_results_to_caches(results,
+                                          copy_datasets,
+                                          pipelines,
+                                          caches)
+except ValueError:
+    print("No subjects left to evaluate.")
 
 df = convert_caches_to_dataframes(caches, datasets, pipelines)
 
