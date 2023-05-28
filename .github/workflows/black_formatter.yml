@@ -18,4 +18,5 @@ jobs:
           git config user.name "[Black Formatter]"
           git add --all
           git commit -m "Black formatting"
+          git push
   
