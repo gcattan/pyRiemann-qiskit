@@ -14,6 +14,8 @@ jobs:
       - name: Commit change
         if: steps.action_black.outputs.is_formatted == 'true'
         run: |
+          git config user.email ""
+          git config user.name "[Black Formatter]"
           git add --all
           git commit -m "Black formatting"
   
