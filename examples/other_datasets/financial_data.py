@@ -12,17 +12,12 @@ This example illustrates the method introduced in [TODO]
 # License: BSD (3-clause)
 # Patent: TODO
 
-from matplotlib import pyplot as plt
 from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from imblearn.under_sampling import NearMiss
 from pyriemann.preprocessing import Whitening
 from pyriemann.estimation import XdawnCovariances
-from pyriemann_qiskit.pipelines import (
-    QuantumClassifierWithDefaultRiemannianPipeline,
-)
 from pyriemann_qiskit.classification import QuanticSVM
 import warnings
 import seaborn as sns
@@ -42,17 +37,17 @@ warnings.filterwarnings("ignore")
 # Initialization
 # ----------------
 #
-# Download financial data (loan transaction)
+# Download financial data (loan transactions)
 
 url = "https://zenodo.org/record/7418458/files/INFINITECH_synthetic_inmediate_loans.csv"
 dataset = pd.read_csv(url, sep=";")
 
 # Transform into binary classification:
-# Regroups fraud and suspicion of fraud
+# Regroups frauds and suspicions of fraud
 dataset.FRAUD[dataset.FRAUD == 2] = 1
 
 # Select a few features for the example
-# Note: The choice of these features is not really arbitrary
+# Note: The choice of these features is not really arbitrary.
 # You can use `ydata_profiling` and check these variable are:
 # 
 # 1) Not correlated
@@ -71,12 +66,6 @@ features['IP_TERMINAL'] = features['IP_TERMINAL'].astype('category').cat.codes
 # Note: this is done only for progamming reason, due to our implementation
 # of the `ToEpochs` transformer (see below)
 features['index'] = features.index
-
-##############################################################################
-# We have to do this because the classes are called 'Target' and 'NonTarget'
-# but the evaluation function uses a LabelEncoder, transforming them
-# to 0 and 1
-labels_dict = {"Target": 1, "NonTarget": 0}
 
 ##############################################################################
 # Create the pipeline
@@ -179,8 +168,11 @@ gs.fit(X, y)
 # /!\ Ideally, we should have different datasets for training and validation.
 # In a real scenario, we could use some data augmentation technics, because
 # we have only a few samples.
-gs.best_estimator_.score(X, y)
+score_svm = gs.best_estimator_.score(X, y)
 
 # Let's take the same parameters but evaluate the pipeline with a quantum SVM:
 gs.best_estimator_.steps[4] = ('quanticsvm', QuanticSVM(quantum=True))
-gs.best_estimator_.fit(X, y).score(X, y)
+score_qsvm = gs.best_estimator_.fit(X, y).score(X, y)
+
+# Print the results
+print(f'Classical: {score_svm}; Quantum: {score_qsvm}')
