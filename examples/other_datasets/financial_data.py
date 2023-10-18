@@ -1,6 +1,6 @@
 """
 ====================================================================
-Suspicious activity detection on financial data
+SUSPICIOUS ACTIVITY DETECTION USING QUANTUM COMPUTER 
 ====================================================================
 
 In this example, we will illustrate the use of RG+quantum for
@@ -8,9 +8,9 @@ the detection of suspicious activity on financial data.
 This example illustrates the method introduced in [TODO]
 
 """
-# Author: Gregoire Cattan
+# Author: Gregoire Cattan, Filipe Barroso
 # License: BSD (3-clause)
-# Patent: TODO
+# Patent application number: 18/380799
 
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.model_selection import GridSearchCV
