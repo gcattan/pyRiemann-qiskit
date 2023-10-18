@@ -5,7 +5,6 @@ SUSPICIOUS ACTIVITY DETECTION USING QUANTUM COMPUTER
 
 In this example, we will illustrate the use of RG+quantum for
 the detection of suspicious activity on financial data.
-This example illustrates the method introduced in [TODO]
 
 """
 # Author: Gregoire Cattan, Filipe Barroso
