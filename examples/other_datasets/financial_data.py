@@ -165,7 +165,7 @@ gs = GridSearchCV(
 # We only have about 200 frauds epochs over 30K entries.
 # Let's balance the problem using NearMiss.
 # Note: at this stage `features` also contains the `index` column.
-# So `NearMiss` we choose the closed 200 non-fraud epochs to the 200 fraud-epochs
+# So `NearMiss` we choose the closest 200 non-fraud epochs to the 200 fraud-epochs
 # based also on this `index` column. This should be improved for real use cases.
 X, y = NearMiss().fit_resample(features.to_numpy(), target.to_numpy())
 
@@ -174,7 +174,7 @@ gs.fit(X, y)
 
 # This is the best score with the classical SVM.
 # /!\ Ideally, we should have different datasets for training and validation.
-# In a real scenario, we could use some data augmentation technics, because
+# In a real scenario, we could use some data augmentation techniques, because
 # we have only a few samples.
 score_svm = gs.best_estimator_.score(X, y)
 
