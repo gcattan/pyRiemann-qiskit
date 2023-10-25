@@ -25,6 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from sklearn.impute import KNNImputer
 from imblearn.under_sampling import NearMiss
 from pyriemann.preprocessing import Whitening
 from pyriemann.estimation import XdawnCovariances
@@ -69,37 +70,50 @@ dataset.FRAUD[dataset.FRAUD == 2] = 1
 channels = [
     "IP_TERMINAL",
     "FK_CONTRATO_PPAL_OPE",
-    "SALDO_ANTES_PRESTAMO",
+    "IND_EXTRANJERO",
     "FK_NUMPERSO",
-    "FECHA_ALTA_CLIENTE",
-    "FK_TIPREL",
+    "IND_RESIDENTE",
+    "IND_IMAGIN_BANK",
 ]
-digest = ["IP", "Contract code", "Balance", "ID", "Seniority", "Ownership"]
-features = dataset[channels]
-target = dataset.FRAUD
+digest = ["IP", "Contract code", "Stranger", "ID", "Resident", "ImaginBank customer"]
+features = dataset[channels + ["FRAUD"]]
 
 # let's display a screenshot of the pre-processed dataset
 # We only have about 200 frauds epochs over 30K entries.
 
 print(features.head())
-print(f"number of fraudulent loans: {target[target == 1].size}")
-print(f"number of genuine loans: {target[target == 0].size}")
+# print(f"number of fraudulent loans: {target[target == 1].size}")
+# print(f"number of genuine loans: {target[target == 0].size}")
 
 # Simple treatement for NaN value
 features.fillna(method="ffill", inplace=True)
 
 # Convert date value to linux time
-features["FECHA_ALTA_CLIENTE"] = pd.to_datetime(features["FECHA_ALTA_CLIENTE"])
-features["FECHA_ALTA_CLIENTE"] = features["FECHA_ALTA_CLIENTE"].apply(lambda x: x.value)
+# features["FECHA_ALTA_CLIENTE"] = pd.to_datetime(features["FECHA_ALTA_CLIENTE"])
+# features["FECHA_ALTA_CLIENTE"] = features["FECHA_ALTA_CLIENTE"].apply(lambda x: x.value)
 
 # Let's encode our categorical variable (LabelEncoding):
 features["IP_TERMINAL"] = features["IP_TERMINAL"].astype("category").cat.codes
 
-# ... and create an 'index' column in the dataset
+# We do not have a history for each customer in the dataset.
+# Let's create an artificial one:
+n_entries = features["FK_NUMPERSO"].count()
+replace_at = np.random.randint(n_entries, size=(int(n_entries * 0.8), ))
+
+# To do so, we will remove the customer_id of some loans
+features["FK_NUMPERSO"][replace_at] = np.nan
+
+# And let a KNNImputer assign the customer_id of the closest transaction
+features["FK_NUMPERSO"] = KNNImputer(n_neighbors=1).fit_transform(features.to_numpy())[:, 3]
+features = features.groupby('FK_NUMPERSO').filter(lambda x : len(x)>20)
+
+# Finnaly, let's create an 'index' column in the dataset
 # Note: this is done only for progamming reason, due to our implementation
 # of the `ToEpochs` transformer (see below)
 features["index"] = features.index
 
+target = features.FRAUD
+features.drop(columns=["FRAUD"], inplace=True)
 
 ##############################################################################
 # Pipeline for binary classification
@@ -121,8 +135,11 @@ class ToEpochs(TransformerMixin, BaseEstimator):
         all_epochs = []
         for x in X:
             index = x[-1]
-            epoch = features[features.index > index - self.n]
+            epoch = features[features['FK_NUMPERSO'] == x[3]]
             epoch = epoch[epoch.index <= index]
+            epoch = epoch.tail(self.n)
+            if(epoch.shape[0] < self.n):
+                epoch = pd.concat([epoch, *[epoch.tail(1)]*(self.n - epoch.shape[0])]) 
             epoch.drop(columns=["index"], inplace=True)
             all_epochs.append(np.transpose(epoch))
         all_epochs = np.array(all_epochs)
