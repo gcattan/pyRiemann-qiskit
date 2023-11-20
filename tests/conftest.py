@@ -1,8 +1,12 @@
+"""
+Contains helper methods and classes to manage the tests.
+"""
 import pytest
 import numpy as np
 from functools import partial
 from pyriemann.datasets import make_covariances
 from pyriemann_qiskit.datasets import get_mne_sample
+from operator import itemgetter
 
 
 def requires_module(function, name, call=None):
@@ -32,8 +36,7 @@ def rndstate():
 @pytest.fixture
 def get_covmats(rndstate):
     def _gen_cov(n_matrices, n_channels):
-        return make_covariances(n_matrices, n_channels, rndstate,
-                                return_params=False)
+        return make_covariances(n_matrices, n_channels, rndstate, return_params=False)
 
     return _gen_cov
 
@@ -41,8 +44,7 @@ def get_covmats(rndstate):
 @pytest.fixture
 def get_covmats_params(rndstate):
     def _gen_cov_params(n_matrices, n_channels):
-        return make_covariances(n_matrices, n_channels, rndstate,
-                                return_params=True)
+        return make_covariances(n_matrices, n_channels, rndstate, return_params=True)
 
     return _gen_cov_params
 
@@ -53,19 +55,24 @@ def _get_labels(n_matrices, n_classes):
     return np.arange(n_classes).repeat(n_matrices // n_classes)
 
 
+@pytest.fixture
+def get_labels():
+    return _get_labels
+
+
 def _get_rand_feats(n_samples, n_features, rs):
     """Generate a set of n_features-dimensional samples for test purpose"""
     return rs.randn(n_samples, n_features)
 
 
-def _get_binary_feats(n_samples, n_features):
-    """Generate a balanced binary set of n_features-dimensional
-     samples for test purpose, containing either 0 or 1"""
-    n_classes = 2
+def _get_separable_feats(n_samples, n_features, n_classes):
+    """Generate a balanced set of n_features-dimensional
+    samples for test purpose, containing 0, 1, 2, ... n_classes as values"""
     class_len = n_samples // n_classes  # balanced set
-    samples_0 = np.zeros((class_len, n_features))
-    samples_1 = np.ones((class_len, n_features))
-    samples = np.concatenate((samples_0, samples_1), axis=0)
+    samples = []
+    for i in range(n_classes):
+        samples.append(np.zeros((class_len, n_features)) + i)
+    samples = np.concatenate(samples, axis=0)
     return samples
 
 
@@ -77,24 +84,37 @@ def get_dataset(rndstate):
     If the attribute `type` is None, the default mne dataset
     is returned.
     """
-    # Note: the n_classes parameters might be misleading as it is only
+
     # recognized by the _get_labels methods.
     def _get_dataset(n_samples, n_features, n_classes, type="bin"):
         if type == "rand":
             samples = _get_rand_feats(n_samples, n_features, rndstate)
             labels = _get_labels(n_samples, n_classes)
         elif type == "bin":
-            samples = _get_binary_feats(n_samples, n_features)
+            samples = _get_separable_feats(n_samples, n_features, n_classes)
+            labels = _get_labels(n_samples, n_classes)
+        elif type == "rand_cov":
+            samples = make_covariances(n_samples, n_features, 0, return_params=False)
+            labels = _get_labels(n_samples, n_classes)
+        elif type == "bin_cov":
+            samples_0 = make_covariances(
+                n_samples // n_classes, n_features, 0, return_params=False
+            )
+            samples_1 = samples_0 * 2
+            samples = np.concatenate((samples_0, samples_1), axis=0)
             labels = _get_labels(n_samples, n_classes)
         else:
             samples, labels = get_mne_sample()
         return samples, labels
+
     return _get_dataset
 
 
 def _get_linear_entanglement(n_qbits_in_block, n_features):
-    return [list(range(i, i + n_qbits_in_block))
-            for i in range(n_features - n_qbits_in_block + 1)]
+    return [
+        list(range(i, i + n_qbits_in_block))
+        for i in range(n_features - n_qbits_in_block + 1)
+    ]
 
 
 def _get_pauli_z_rep_linear_entanglement(n_features):
@@ -122,3 +142,53 @@ def get_pauli_z_linear_entangl_idx():
         return [indices for _ in range(reps)]
 
     return _get_pauli_z_linear_entangl_idx
+
+
+class BinaryTest:
+    def prepare(self, n_samples, n_features, quantum_instance, type):
+        self.n_classes = 2
+        self.n_samples = n_samples
+        self.n_features = n_features
+        self.quantum_instance = quantum_instance
+        self.type = type
+        self.class_len = n_samples // self.n_classes
+
+    def test(self, get_dataset):
+        # there is no __init__ method with pytest
+        n_samples, n_features, quantum_instance, type = itemgetter(
+            "n_samples", "n_features", "quantum_instance", "type"
+        )(self.get_params())
+        self.prepare(n_samples, n_features, quantum_instance, type)
+        self.samples, self.labels = get_dataset(
+            self.n_samples, self.n_features, self.n_classes, self.type
+        )
+        self.additional_steps()
+        self.check()
+
+    def get_params(self):
+        raise NotImplementedError
+
+    def additional_steps(self):
+        raise NotImplementedError
+
+    def check(self):
+        raise NotImplementedError
+
+
+class BinaryFVT(BinaryTest):
+    def additional_steps(self):
+        self.quantum_instance.fit(self.samples, self.labels)
+        self.prediction = self.quantum_instance.predict(self.samples)
+        print(self.labels, self.prediction)
+
+
+class MultiClassTest(BinaryTest):
+    def prepare(self, n_samples, n_features, quantum_instance, type):
+        super().prepare(n_samples, n_features, quantum_instance, type)
+        self.n_classes = 3
+        self.class_len = n_samples // self.n_classes
+
+
+class MultiClassFVT(MultiClassTest):
+    def additional_steps(self):
+        BinaryFVT.additional_steps(self)
