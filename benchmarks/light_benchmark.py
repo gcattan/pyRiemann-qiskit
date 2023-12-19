@@ -119,21 +119,29 @@ for key, pipeline in pipelines.items():
 print("Scores: ", scores)
 
 ##############################################################################
-# Compare score between PR and main
-# ---------------------------------
+# Compare scores between PR and main branches
+# -------------------------------------------
 #
 ##############################################################################
+
+# parse environment variables
+env_file = os.getenv('GITHUB_ENV')
+vars = open(env_file, "a").readlines()
+git_env = {}
+for v in vars:
+    pair = v.split("=")
+    git_env[pair[0]] = pair[1]
 
 success = True
 
 for key, score in scores.items():
     pr_score = os.getenv(f"PR_SCORE_{key}")
-    if pr_score is None:
+    if not f"PR_SCORE_{key}" in git_env:
         # PR branch
-        os.environ["PR_SCORE_{key}"] = str(score)
+        env_file.write(f"PR_SCORE_{key}", str(score))
     else:
         # Main branch
         success = success and (True if float(pr_score) >= score else False)
 
-print("Success: ", success)
-os.environ["SUCCESS"] = "1" if success else "0"
+env_file.write(f"SUCCESS", "1" if success else "0")
+
