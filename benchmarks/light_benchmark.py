@@ -28,7 +28,7 @@ from pyriemann_qiskit.pipelines import (
     QuantumMDMWithRiemannianPipeline,
 )
 import warnings
-import os
+import sys
 
 print(__doc__)
 
@@ -73,25 +73,25 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 pipelines = {}
 
-pipelines["RG+QSVM"] = QuantumClassifierWithDefaultRiemannianPipeline(
+pipelines["RG_QSVM"] = QuantumClassifierWithDefaultRiemannianPipeline(
     shots=100,
     nfilter=2,
     dim_red=PCA(n_components=5),
 )
 
-pipelines["RG+VQC"] = QuantumClassifierWithDefaultRiemannianPipeline(
+pipelines["RG_VQC"] = QuantumClassifierWithDefaultRiemannianPipeline(
     shots=100, spsa_trials=5, two_local_reps=2
 )
 
-pipelines["QMDM-mean"] = QuantumMDMWithRiemannianPipeline(
+pipelines["QMDM_mean"] = QuantumMDMWithRiemannianPipeline(
     convex_metric="mean", quantum=True
 )
 
-pipelines["QMDM-dist"] = QuantumMDMWithRiemannianPipeline(
+pipelines["QMDM_dist"] = QuantumMDMWithRiemannianPipeline(
     convex_metric="distance", quantum=True
 )
 
-pipelines["RG+LDA"] = make_pipeline(
+pipelines["RG_LDA"] = make_pipeline(
     XdawnCovariances(
         nfilter=2,
         estimator="lwf",
@@ -124,23 +124,19 @@ print("Scores: ", scores)
 #
 ##############################################################################
 
-# parse environment variables
-env_file = os.getenv("GITHUB_ENV")
-vars = open(env_file, "a").readlines()
-git_env = {}
-for v in vars:
-    pair = v.split("=")
-    git_env[pair[0]] = pair[1]
+def set_output(key:str, value: str):
+    print(f"::set-output name={key}::{value}")
 
-success = True
+is_pr = sys.argv[1] == "pr"
 
-for key, score in scores.items():
-    pr_score = os.getenv(f"PR_SCORE_{key}")
-    if not f"PR_SCORE_{key}" in git_env:
-        # PR branch
-        env_file.write(f"PR_SCORE_{key}", str(score))
-    else:
-        # Main branch
+if is_pr:
+    for key, score in scores.items():
+        set_output(key, score)
+else:
+    success = True
+    i = 0
+    for key, score in scores.items():
+        i = i + 1
+        pr_score = sys.argv[i]
         success = success and (True if float(pr_score) >= score else False)
-
-env_file.write(f"SUCCESS", "1" if success else "0")
+    set_output("success", "1" if success else "0")
