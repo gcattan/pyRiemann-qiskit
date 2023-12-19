@@ -125,7 +125,7 @@ print("Scores: ", scores)
 ##############################################################################
 
 # parse environment variables
-env_file = os.getenv('GITHUB_ENV')
+env_file = os.getenv("GITHUB_ENV")
 vars = open(env_file, "a").readlines()
 git_env = {}
 for v in vars:
@@ -144,4 +144,3 @@ for key, score in scores.items():
         success = success and (True if float(pr_score) >= score else False)
 
 env_file.write(f"SUCCESS", "1" if success else "0")
-
