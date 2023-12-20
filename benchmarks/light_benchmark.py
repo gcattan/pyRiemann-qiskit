@@ -124,10 +124,8 @@ print("Scores: ", scores)
 #
 ##############################################################################
 
-
 def set_output(key: str, value: str):
     print(f"::set-output name={key}::{value}")
-
 
 is_pr = sys.argv[1] == "pr"
 
