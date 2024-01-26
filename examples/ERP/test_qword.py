@@ -1,143 +1,100 @@
-from qiskit import Aer, QuantumCircuit, transpile, execute
-from qiskit.quantum_info import SparsePauliOp
+import mne
+from moabb.datasets.base import BaseDataset
+import os
+import glob
+import zipfile as z
+from moabb.datasets import download as dl
+import os.path as osp
 import numpy as np
-from sklearn.datasets import make_blobs
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
-from qiskit.primitives import Sampler
 
-class RiemannianGradientOptimizer:
-    def __init__(self, circuit, stepsize=0.01, restriction=None, exact=False, trottersteps=1):
-        self.circuit = circuit
-        self.hamiltonian = [SparsePauliOp('Z' * circuit.num_qubits)]  # Assuming a Z-pauli Hamiltonian for simplicity
-        self.nqubits = circuit.num_qubits
-        self.lie_algebra_basis_ops, self.lie_algebra_basis_names = self.get_su_n_operators(restriction)
-        self.exact = exact
-        self.trottersteps = trottersteps
-        self.coeffs, self.observables = [1], [SparsePauliOp('Z' * circuit.num_qubits)]
-        self.stepsize = stepsize
+URL = "https://zenodo.org/record/5055046/files/"
 
-    def step(self):
-        # new_circuit = QuantumCircuit(self.nqubits)
-        new_circuit = v
-        cost = cost_f(self.circuit)  # Assuming the circuit object has a method for calculating the cost
-        omegas = self.get_omegas()
-        non_zero_omegas = -omegas[omegas != 0]
+events = dict(easy=2, medium=3)
+class Neuroergonomics2021Dataset(BaseDataset):
+    def __init__(self):
+        super().__init__(
+            subjects=list(range(1, 16)),  # 15 participants
+            sessions_per_subject=2,  # 2 sessions per subject
+            events=events,
+            code='Neuroergonomics2021',
+            interval=[0, 1],  # Epochs are 2-second long
+            paradigm='rstate' 
+        )
 
-        for i, omega in enumerate(non_zero_omegas):
-            new_circuit = self.append_time_evolution(new_circuit, self.lie_algebra_basis_ops[i], self.stepsize, self.trottersteps, self.exact)
+    def _get_single_subject_data(self, subject):
+        """Load data for a single subject."""
+        data = {}
 
-        self.circuit = new_circuit
-        return self.circuit, cost
+        subject_path = self.data_path(subject)[0]
 
-    def get_su_n_operators(self, restriction):
-        operators = []
-        names = []
+        for session in range(1, self.n_sessions + 1):
+            session_path = os.path.join(subject_path, f"S{session}/eeg/")
+            
+            # get task 'easy'
+            easy = os.path.join(session_path, f"alldata_sbj{str(subject).zfill(2)}_sess{session}_{'MATBeasy'}.set")
+            easy_epochs = mne.io.read_epochs_eeglab(easy)
+           
+            # get task 'med'
+            med = os.path.join(session_path, f"alldata_sbj{str(subject).zfill(2)}_sess{session}_{'MATBmed'}.set")
+            med_epochs = mne.io.read_epochs_eeglab(med)
+            
+            # concatenate raw data
+            raw_data = np.concatenate((easy_epochs.get_data(), med_epochs.get_data()))
+            # reshape data in the form n_channel x n_sample
+            raw_data = raw_data.transpose((1, 0, 2))
+            n_channel, n_epochs, n_samples = raw_data.shape
+            raw_data = raw_data.reshape((n_channel, n_epochs * n_samples))
+            
+            # add stim channel
+            n_epochs_easy = easy_epochs.get_data().shape[0]
+            n_epochs_med = med_epochs.get_data().shape[0]
+            stim = np.zeros((1, n_epochs * n_samples))
+            for i in range(n_epochs):
+                stim[0, n_samples * i + 1] = events['easy'] if i < n_epochs_easy else events['medium']
 
-        if restriction is None:
-            for wire in range(self.nqubits):
-                operators.append(SparsePauliOp(f'Z'))
-                names.append(f'Z{wire}')
-        else:
-            for ps in set(restriction.ops):
-                operators.append(SparsePauliOp(ps))
-                names.append(operators.pauli.pauli_to_label(SparsePauliOp(ps)))
+            raw_data = np.concatenate((raw_data, stim))
+            
+            # create info
+            self._chnames = [str(i) for i in range((raw_data.shape[0] - 1))] + ['stim'] # TODO: real chnames and location
+            self._chtypes = ["eeg"] * (raw_data.shape[0] - 1) + ["stim"]
 
-        return operators, names
+            info = mne.create_info(
+                ch_names=self._chnames, sfreq=500, ch_types=self._chtypes, verbose=False
+            )
+            raw = mne.io.RawArray(raw_data, info)
 
-    def get_omegas(self):
-        num_terms = len(self.observables)
-        omegas = np.zeros((num_terms, len(self.lie_algebra_basis_names)), dtype=complex)
+            # Only one run => "0"
+            data[str(session)] = {"0": raw}
 
-        for i, obs in enumerate(self.observables):
-            for j, lie_element in enumerate(self.lie_algebra_basis_names):
-                shift_params_plus = self.circuit.parameters.copy()
-                shift_params_plus[self.circuit.parameters.index(lie_element)] += np.pi / 2
+        return data
 
-                shift_params_minus = self.circuit.parameters.copy()
-                shift_params_minus[self.circuit.parameters.index(lie_element)] -= np.pi / 2
+    def data_path(
+        self, subject, path=None, force_update=False, update_path=None, verbose=None
+    ):
+        if subject not in self.subject_list:
+            raise (ValueError("Invalid subject number"))
+    
+        # check if has the .zip
+        url = f"{URL}P{subject:02}.zip"
 
-                circuit_plus = self.circuit.copy()
-                circuit_minus = self.circuit.copy()
+        path_zip = dl.data_dl(url, "Neuroergonomics2021")
+        path_folder = path_zip.strip(f"P{subject:02}.zip")
 
-                circuit_plus.assign_parameters(shift_params_plus)
-                circuit_minus.assign_parameters(shift_params_minus)
+         # check if has to unzip
+        if not (osp.isdir(path_folder + f"P{subject:02}")) and not (
+            osp.isdir(path_folder + f"P{subject:02}")
+        ):
+            zip_ref = z.ZipFile(path_zip, "r")
+            zip_ref.extractall(path_folder)
 
-                plus_result = self.run_circuit(circuit_plus)
-                minus_result = self.run_circuit(circuit_minus)
+        final_path = f"{path_folder}P{subject:02}"
+        return [final_path]
 
-                omegas[i, j] = 0.5 * (plus_result - minus_result) * self.coeffs[i]
+dataset = Neuroergonomics2021Dataset()
 
-        return np.dot(omegas, self.coeffs)
+# Example usage with MOABB
+from moabb.paradigms import RestingStateToP300Adapter
+paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.9)
+X, y, metadata = paradigm.get_data(dataset, subjects=[1])
 
-    def append_time_evolution(self, circuit, riemannian_gradient, t, n, exact=False):
-        for i in range(n):
-            for j in range(riemannian_gradient.num_qubits):
-                circuit.rx(-t / n, j)  # Using Rx gate for simplicity, replace with appropriate gates for your circuit
-                circuit.append(riemannian_gradient.to_gate(), range(riemannian_gradient.num_qubits))
-                circuit.rx(t / n, j)
-        return circuit
-
-    def run_circuit(self, circuit):
-        backend = Aer.get_backend('qasm_simulator')
-        job = execute(circuit, backend, shots=1024)
-        result = job.result().get_counts()
-        return result['0'] / 1024.0
-
-# Generate a simple classification dataset
-X, y = make_blobs(n_samples=100, centers=2, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Standardize the features
-scaler = StandardScaler().fit(X_train)
-X_train_scaled = scaler.transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# Quantum circuit for binary classification
-def variational_circuit(params, x):
-    circuit = QuantumCircuit(len(x))
-    circuit.rx(params[0], 0)
-    circuit.ry(params[1], 1)
-    circuit.cx(0, 1)
-    circuit.measure_all()
-    return circuit
-
-# Quantum model
-def quantum_model(params, x):
-    qc = variational_circuit(params, x)
-    transpiled_qc = transpile(qc, Aer.get_backend('qasm_simulator'))
-    return transpiled_qc
-
-# Cost function
-def cost_f(params, X, y):
-    sampler = Sampler()
-    predictions = np.array([sampler.run(quantum_model(params, x)).result().quasi_dists[0][0] for x in X])
-    print(predictions)
-    return np.mean((predictions - y) ** 2)
-
-# Initial parameters
-init_params = np.random.rand(2)
-init_circuit = quantum_model(init_params, X_train_scaled)
-init_cost = cost_f(init_params, X_train_scaled, y_train)
-
-print(f"Initial cost: {init_cost}")
-
-# Instantiate the optimizer
-optimizer = RiemannianGradientOptimizer(init_circuit, stepsize=0.01, exact=False, trottersteps=1)
-
-# Optimization loop
-for step in range(5):
-    circuit, cost = optimizer.step()
-    print(f"Step {step + 1} - cost {cost}")
-
-# Retrieve the final optimized circuit
-final_circuit = optimizer.circuit
-print("Final optimized circuit:")
-print(final_circuit.draw())
-
-# Evaluate the final cost on the test set
-predictions = [np.sign(quantum_model(final_circuit.parameters, x).draw()) for x in X_test_scaled]
-accuracy = accuracy_score(y_test, predictions)
-
-print(f"Final accuracy on test set: {accuracy}")
+print(X.shape, np.unique(y, return_counts=True))
