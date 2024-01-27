@@ -30,6 +30,7 @@ from moabb import set_log_level
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from pyriemann.tangentspace import TangentSpace
 from pyriemann.estimation import XdawnCovariances
+from pyriemann.preprocessing import Whitening
 from moabb.datasets import (
     # bi2012,
     # bi2013a,
@@ -43,6 +44,7 @@ from moabb.datasets import (
     # EPFLP300,
     # Lee2019_ERP,
 )
+from qword_dataset import Neuroergonomics2021Dataset
 from moabb.evaluations import WithinSessionEvaluation
 from moabb.paradigms import P300
 from sklearn.decomposition import PCA
@@ -73,8 +75,11 @@ set_log_level("info")
 #
 # 1) Create paradigm
 # 2) Load datasets
+from moabb.paradigms import RestingStateToP300Adapter
+events = dict(easy=2, medium=3)
+paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.9)
 
-paradigm = P300()
+# paradigm = P300()
 
 # Datasets:
 # name, electrodes, subjects
@@ -86,7 +91,7 @@ paradigm = P300()
 # bi2015a        32  43
 # bi2015b        32  44
 
-datasets = [BNCI2014009()]
+datasets = [Neuroergonomics2021Dataset()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
@@ -124,15 +129,16 @@ pipelines = {}
 pipelines["LDA_denoised"] = make_pipeline(
     XdawnCovariances(nfilter=1),
     TangentSpace(),
-    PCA(n_components=8),
-    BasicQnnAutoencoder(2, 1),
+    PCA(n_components=4),
+    BasicQnnAutoencoder(1, 1),
     LDA()
 )
 
 pipelines["LDA"] = make_pipeline(
     XdawnCovariances(nfilter=1),
+    # Whitening(dim_red={"n_components": 2}),
     TangentSpace(), 
-    PCA(n_components=8),
+    PCA(n_components=4),
     LDA()
 )
 
