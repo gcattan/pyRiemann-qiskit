@@ -29,7 +29,7 @@ import seaborn as sns
 from moabb import set_log_level
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from pyriemann.tangentspace import TangentSpace
-from pyriemann.estimation import XdawnCovariances
+from pyriemann.estimation import XdawnCovariances, ERPCovariances
 from pyriemann.preprocessing import Whitening
 from moabb.datasets import (
     # bi2012,
@@ -44,6 +44,7 @@ from moabb.datasets import (
     # EPFLP300,
     # Lee2019_ERP,
 )
+from sklearn.base import BaseEstimator, TransformerMixin
 from qword_dataset import Neuroergonomics2021Dataset
 from moabb.evaluations import WithinSessionEvaluation
 from moabb.paradigms import P300
@@ -57,7 +58,7 @@ from sklearn.decomposition import PCA
 # )
 from sklearn.pipeline import make_pipeline
 from pyriemann_qiskit.autoencoders import BasicQnnAutoencoder
-
+from pyriemann.spatialfilters import Xdawn
 print(__doc__)
 
 ##############################################################################
@@ -77,7 +78,7 @@ set_log_level("info")
 # 2) Load datasets
 from moabb.paradigms import RestingStateToP300Adapter
 events = dict(easy=2, medium=3)
-paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.9)
+paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.5)
 
 # paradigm = P300()
 
@@ -126,19 +127,47 @@ pipelines = {}
 #     convex_metric="distance", quantum=quantum
 # )
 
+class Vectorizer(TransformerMixin):
+    def __init__(self, is_even=True):
+        self.is_even = is_even
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        n_trial, n_features, n_samples = X.shape
+        print(X.shape)
+        return X.reshape((n_trial, n_features * n_samples))
+
+class Devectorizer(TransformerMixin):
+    def __init__(self, is_even=True):
+        self.is_even = is_even
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        n_trial, _= X.shape
+        print(X.shape)
+        return X.reshape((n_trial, 8, 64))
+
 pipelines["LDA_denoised"] = make_pipeline(
-    XdawnCovariances(nfilter=1),
+    Xdawn(),
+    Vectorizer(),
+    BasicQnnAutoencoder(6, 3),
+    Devectorizer(),
+    ERPCovariances(),
     TangentSpace(),
-    PCA(n_components=4),
-    BasicQnnAutoencoder(1, 1),
+    # PCA(n_components=4),
     LDA()
 )
 
 pipelines["LDA"] = make_pipeline(
-    XdawnCovariances(nfilter=1),
+    Xdawn(),
+    ERPCovariances(),
     # Whitening(dim_red={"n_components": 2}),
     TangentSpace(), 
-    PCA(n_components=4),
+    # PCA(n_components=4),
     LDA()
 )
 
