@@ -46,7 +46,7 @@ from moabb.datasets import (
 )
 from sklearn.base import BaseEstimator, TransformerMixin
 from qword_dataset import Neuroergonomics2021Dataset
-from moabb.evaluations import WithinSessionEvaluation
+from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation
 from moabb.paradigms import P300
 from sklearn.decomposition import PCA
 
@@ -149,12 +149,13 @@ class Devectorizer(TransformerMixin):
     def transform(self, X, y=None):
         n_trial, _= X.shape
         print(X.shape)
-        return X.reshape((n_trial, 8, 64))
+        return X.reshape((n_trial, 4, 64))
 
 pipelines["LDA_denoised"] = make_pipeline(
-    Xdawn(),
+    # select only 2 components
+    Xdawn(nfilter=2),
     Vectorizer(),
-    BasicQnnAutoencoder(6, 3),
+    BasicQnnAutoencoder(5, 3),
     Devectorizer(),
     ERPCovariances(),
     TangentSpace(),
@@ -163,7 +164,9 @@ pipelines["LDA_denoised"] = make_pipeline(
 )
 
 pipelines["LDA"] = make_pipeline(
-    Xdawn(),
+    Xdawn(nfilter=2),
+    # Vectorizer(),
+    # Devectorizer(),
     ERPCovariances(),
     # Whitening(dim_red={"n_components": 2}),
     TangentSpace(), 
@@ -177,7 +180,8 @@ pipelines["LDA"] = make_pipeline(
 #
 # Compare the pipeline using a within session evaluation.
 
-evaluation = WithinSessionEvaluation(
+# Here should be cross session
+evaluation = CrossSessionEvaluation(
     paradigm=paradigm,
     datasets=datasets,
     overwrite=True,
