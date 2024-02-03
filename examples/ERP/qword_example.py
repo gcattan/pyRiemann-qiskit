@@ -1,25 +1,8 @@
 """
-====================================================================
-Classification of P300 datasets from MOABB using Quantum MDM
-====================================================================
-
-The mean and the distance in MDM algorithm are formulated as
-optimization problems. These optimization problems are translated
-to Qiskit using Docplex and additional glue code. These optimizations
-are enabled when we use convex mean or convex distance. This is set
-using the 'convex_metric' parameter of the QuantumMDMWithRiemannianPipeline.
-
-Classification can be run either on emulation or real quantum computer.
-
-If you want to use GPU, you need to use qiskit-aer-gpu that will replace
-qiskit-aer. It is only available on Linux.
-
-pip install qiskit-aer-gpu
-
-pip install moabb==0.5.0
+TODO
 
 """
-# Author: Anton Andreev
+
 # Modified from plot_classify_EEG_tangentspace.py of pyRiemann
 # License: BSD (3-clause)
 
@@ -29,7 +12,7 @@ import seaborn as sns
 from moabb import set_log_level
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from pyriemann.tangentspace import TangentSpace
-from pyriemann.estimation import XdawnCovariances, ERPCovariances
+from pyriemann.estimation import XdawnCovariances, ERPCovariances, Covariances
 from pyriemann.preprocessing import Whitening
 from moabb.datasets import (
     # bi2012,
@@ -96,7 +79,7 @@ datasets = [Neuroergonomics2021Dataset()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 2
+n_subjects = 15
 title = "Datasets: "
 for dataset in datasets:
     title = title + " " + dataset.code
@@ -149,25 +132,27 @@ class Devectorizer(TransformerMixin):
     def transform(self, X, y=None):
         n_trial, _= X.shape
         print(X.shape)
-        return X.reshape((n_trial, 4, 64))
+        return X.reshape((n_trial, 2, 64))
 
 pipelines["LDA_denoised"] = make_pipeline(
     # select only 2 components
-    Xdawn(nfilter=2),
+    Xdawn(nfilter=1),
     Vectorizer(),
-    BasicQnnAutoencoder(5, 3),
+    BasicQnnAutoencoder(6, 1),
     Devectorizer(),
-    ERPCovariances(),
+    # ERPCovariances(estimator='lwf'),
+    Covariances(),
     TangentSpace(),
     # PCA(n_components=4),
     LDA()
 )
 
 pipelines["LDA"] = make_pipeline(
-    Xdawn(nfilter=2),
+    Xdawn(nfilter=1),
     # Vectorizer(),
     # Devectorizer(),
-    ERPCovariances(),
+    # ERPCovariances(estimator='lwf'),
+    Covariances(),
     # Whitening(dim_red={"n_components": 2}),
     TangentSpace(), 
     # PCA(n_components=4),
