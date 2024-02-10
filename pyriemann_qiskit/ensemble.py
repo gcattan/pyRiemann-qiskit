@@ -133,3 +133,35 @@ class JudgeClassifier(BaseEstimator, ClassifierMixin):
             return predict_proba
         predict_proba[mask] = self.judge.predict_proba(X[mask])
         return predict_proba
+
+
+###############################################################################
+# Unsupervised classification
+# ---------------------------
+#
+# We will now predict whether or not the fraud was a collusion or not.
+# This is a two-stage process:
+#
+# 1) We have the no-aware ERP method (namely RandomForest)
+#    to predict whether or not the transaction is a fraud;
+# 2) If the fraud is caracterized, we use the QSVC pipeline to
+#    predict whether or not it is a collusion.
+
+
+class ERP_CollusionClassifier(ClassifierMixin):
+    def __init__(self, erp_clf, row_clf, threshold=0.5):
+        self.row_clf = row_clf
+        self.erp_clf = erp_clf
+        self.threshold = threshold
+
+    def fit(self, X, y):
+        # Do not apply: Classifiers are already fitted
+        return self
+
+    def predict(self, X):
+        y_pred = self.row_clf.predict(X).astype(float)
+        collusion_prob = self.erp_clf.predict_proba(X)
+        y_pred[y_pred == 1] = collusion_prob[y_pred == 1, 1].transpose()
+        y_pred[y_pred >= self.threshold] = 1
+        y_pred[y_pred < self.threshold] = 0
+        return y_pred
