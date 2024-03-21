@@ -27,6 +27,7 @@ from pyriemann_qiskit.pipelines import (
     QuantumClassifierWithDefaultRiemannianPipeline,
     QuantumMDMWithRiemannianPipeline,
 )
+from pyriemann_qiskit.classification import QuanticNCH
 import warnings
 import sys
 
