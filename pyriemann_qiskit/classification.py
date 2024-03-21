@@ -843,6 +843,9 @@ class NearestConvexHull(BaseEstimator, ClassifierMixin, TransformerMixin):
                 for cov in self.matrices_per_class_[c]
             ]
 
+            print("distances_to_coves")
+            print(distances_to_covs)
+
             # take the first N min distances
             indexes = np.argsort(np.array(distances_to_covs))[
                 0 : self.n_samples_per_hull
