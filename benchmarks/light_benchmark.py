@@ -105,7 +105,7 @@ pipelines["RG_LDA"] = make_pipeline(
 pipelines["NCH+MIN_HULL"] = make_pipeline(
     XdawnCovariances(
         nfilter=3,
-        classes=[labels_dict["Target"]],
+       # classes=[labels_dict["Target"]],
         estimator="lwf",
         xdawn_estimator="scm",
     ),
