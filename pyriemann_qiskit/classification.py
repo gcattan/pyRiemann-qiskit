@@ -922,7 +922,7 @@ class NearestConvexHull(BaseEstimator, ClassifierMixin, TransformerMixin):
             for test_sample in X:
                 dist_sample = self._process_sample(test_sample)
                 dist.append(dist_sample)
-
+        print(dist)
         return dist
 
     def predict(self, X):
