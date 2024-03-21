@@ -102,6 +102,21 @@ pipelines["RG_LDA"] = make_pipeline(
     LDA(solver="lsqr", shrinkage="auto"),
 )
 
+pipelines["NCH+MIN_HULL"] = make_pipeline(
+    XdawnCovariances(
+        nfilter=3,
+        classes=[labels_dict["Target"]],
+        estimator="lwf",
+        xdawn_estimator="scm",
+    ),
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        hull_type="min-hull",
+        quantum=False,
+    ),
+)
 ##############################################################################
 # Compute score
 # --------------
