@@ -20,7 +20,7 @@ from qiskit.utils import QuantumInstance
 from qiskit.utils.quantum_instance import logger
 from qiskit_ibm_provider import IBMProvider, least_busy
 from qiskit_machine_learning.algorithms import QSVC, VQC, PegasosQSVC
-from qiskit_machine_learning.kernels.quantum_kernel import QuantumKernel
+# from qiskit_machine_learning.kernels.quantum_kernel import QuantumKernel
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.svm import SVC
 
