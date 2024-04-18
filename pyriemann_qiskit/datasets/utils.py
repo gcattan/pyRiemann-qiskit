@@ -277,3 +277,52 @@ class MockDataset:
 
     def __str__(self) -> str:
         return self.code_
+
+
+
+def split_kfold(X, y, k):
+    # split X in k-folds
+    fold_size = int(X.shape[0] / k)
+    X_split = []
+    y_split = []
+    for i in range(k):
+        X_split.append(X[i * fold_size : (i + 1) * fold_size])
+        y_split.append(y[i * fold_size : (i + 1) * fold_size])
+    return X_split, y_split
+
+dataset = bi2013a()
+X, y, _ = paradigm.get_data(dataset, subjects=[1])
+X_split, y_split = split_kfold(X, y, 5)
+
+# Import and instantiate sklearn SVC classifier, then run it on each fold of the data
+from sklearn.svm import SVC
+
+svc = make_pipeline(
+    XdawnCovariances(
+        nfilter=3,
+        # classes=[labels_dict["Target"]],
+        estimator="lwf",
+        xdawn_estimator="scm",
+    ),
+    MDM(),
+)
+
+import numpy as np
+svc_score = []
+for i in range(5):
+    X_test, y_test = X_split[i], y_split[i]
+
+    # X_train is the concatenation of all folds in X_split except fold at position i
+    X_train = np.concatenate([X_split[j] for j in range(5) if j!= i])
+    y_train = np.concatenate([y_split[j] for j in range(5) if j!= i])
+    
+    svc.fit(X_train, y_train)
+    svc_score.append(svc.score(X_test, y_test))
+
+import numpy as np
+print(svc_score)
+best_split = np.argmax(svc_score)
+X_test, y_test = X_split[best_split], y_split[best_split]
+
+X_train = np.concatenate([X_split[j] for j in range(5) if j!= best_split])
+y_train = np.concatenate([y_split[j] for j in range(5) if j!= best_split])
