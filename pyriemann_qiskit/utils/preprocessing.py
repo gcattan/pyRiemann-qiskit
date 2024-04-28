@@ -104,22 +104,21 @@ class EpochSelectChannel(TransformerMixin):
     """
 
     def fit(self, X, _y=None, **kwargs):
-        cov = Covariances()
-        covs = cov.fit_transform(X)
+        covs = Covariances(estimator='lwf').fit_transform(X)
         m = np.mean(covs, axis=0)
         n_feats, _ = m.shape
-        maxes = []
+        all_max = []
         for i in range(n_feats):
             for j in range(n_feats):
-                if len(maxes) <= self.n_chan:
-                    maxes.append(m[i, j])
+                if len(all_max) <= self.n_chan:
+                    all_max.append(m[i, j])
                 else:
-                    if m[i, j] > max(maxes):
-                        maxes[np.argmin(maxes)] = m[i, j]
+                    if m[i, j] > max(all_max):
+                        all_max[np.argmin(all_max)] = m[i, j]
         indices = []
-        for v in maxes:
-            w = [w0.tolist() for w0 in np.where(m == v)]
-            indices.extend(np.array(w).flatten())
+        for v in all_max:
+            indices.extend(np.argwhere(m == v).flatten())
+
         indices = np.unique(indices)
         self._elec = indices
         return self
@@ -138,6 +137,5 @@ class EpochSelectChannel(TransformerMixin):
     self : ndarray, shape (n_matrices, n_chan, n_samples)
         Matrices with only the selected channel.
     """
-
     def transform(self, X, **kwargs):
         return X[:, self._elec, :]
