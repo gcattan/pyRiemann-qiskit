@@ -82,11 +82,11 @@ class EpochSelectChannel(TransformerMixin):
 
     Notes
     -----
-    .. versionadded:: 0.2.0
+    .. versionadded:: 0.3.0
     """
 
-    def __init__(self, n_components):
-        self.n_components = n_components
+    def __init__(self, n_chan):
+        self.n_chan = n_chan
 
     """Fits one robust scaler on each feature of the training data.
 
@@ -107,11 +107,11 @@ class EpochSelectChannel(TransformerMixin):
         cov = Covariances()
         covs = cov.fit_transform(X)
         m = np.mean(covs, axis=0)
-        features, samples = m.shape
+        n_feats, _ = m.shape
         maxes = []
-        for i in range(features):
-            for j in range(features):
-                if len(maxes) <= self.n_components:
+        for i in range(n_feats):
+            for j in range(n_feats):
+                if len(maxes) <= self.n_chan:
                     maxes.append(m[i, j])
                 else:
                     if m[i, j] > max(maxes):
@@ -121,13 +121,10 @@ class EpochSelectChannel(TransformerMixin):
             w = [w0.tolist() for w0 in np.where(m == v)]
             indices.extend(np.array(w).flatten())
         indices = np.unique(indices)
-        import logging
-        logging.log(level=logging.CRITICAL, msg=indices)
-
         self._elec = indices
         return self
 
-    """Apply the previously trained robust scalers (on scaler by feature)
+    """Select channels based on the computed covariance.
 
     Parameters
     ----------
@@ -138,8 +135,8 @@ class EpochSelectChannel(TransformerMixin):
 
     Returns
     -------
-    self : NdRobustScaler instance
-        The NdRobustScaler instance.
+    self : ndarray, shape (n_matrices, n_chan, n_samples)
+        Matrices with only the selected channel.
     """
 
     def transform(self, X, **kwargs):
