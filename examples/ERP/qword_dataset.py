@@ -9,7 +9,7 @@ import numpy as np
 
 URL = "https://zenodo.org/record/5055046/files/"
 
-events = dict(easy=2, medium=3, diff=4)
+events = dict(rs=1, easy=2, medium=3, diff=4)
 class Neuroergonomics2021Dataset(BaseDataset):
     def __init__(self):
         super().__init__(
@@ -30,6 +30,10 @@ class Neuroergonomics2021Dataset(BaseDataset):
         for session in range(1, self.n_sessions + 1):
             session_path = os.path.join(subject_path, f"S{session}/eeg/")
             
+            # get 'resting state'
+            rs = os.path.join(session_path, f"alldata_sbj{str(subject).zfill(2)}_sess{session}_{'RS'}.set")
+            rs_epochs = mne.io.read_epochs_eeglab(rs)
+
             # get task 'easy'
             easy = os.path.join(session_path, f"alldata_sbj{str(subject).zfill(2)}_sess{session}_{'MATBeasy'}.set")
             easy_epochs = mne.io.read_epochs_eeglab(easy)
@@ -40,23 +44,31 @@ class Neuroergonomics2021Dataset(BaseDataset):
             
             # get task 'diff'
             diff = os.path.join(session_path, f"alldata_sbj{str(subject).zfill(2)}_sess{session}_{'MATBdiff'}.set")
-            diff_epochs = mne.io.read_epochs_eeglab(med)
+            diff_epochs = mne.io.read_epochs_eeglab(diff)
 
             # concatenate raw data
-            raw_data = np.concatenate((easy_epochs.get_data(), med_epochs.get_data(), diff_epochs.get_data()))
+            raw_data = np.concatenate((
+                rs_epochs.get_data(),
+                easy_epochs.get_data(),
+                med_epochs.get_data(),
+                diff_epochs.get_data()))
             # reshape data in the form n_channel x n_sample
             raw_data = raw_data.transpose((1, 0, 2))
             n_channel, n_epochs, n_samples = raw_data.shape
             raw_data = raw_data.reshape((n_channel, n_epochs * n_samples))
             
             # add stim channel
+            n_epochs_rs = rs_epochs.get_data().shape[0]
             n_epochs_easy = easy_epochs.get_data().shape[0]
             n_epochs_med = med_epochs.get_data().shape[0]
-            n_epochs_diff = diff_epochs.get_data().shape[0]
+            # n_epochs_diff = diff_epochs.get_data().shape[0]
             stim = np.zeros((1, n_epochs * n_samples))
             for i in range(n_epochs):
-                stim[0, n_samples * i + 1] = events['easy'] if i < n_epochs_easy else \
-                                                events['medium'] if i < n_epochs_easy + n_epochs_med else events['diff']
+                stim[0, n_samples * i + 1] = \
+                    events['rs'] if i < n_epochs_rs else \
+                    events['easy'] if i < n_epochs_rs + n_epochs_easy else \
+                    events['medium'] if i < n_epochs_rs + n_epochs_easy + n_epochs_med \
+                    else events['diff']
 
             raw_data = np.concatenate((raw_data, stim))
             
