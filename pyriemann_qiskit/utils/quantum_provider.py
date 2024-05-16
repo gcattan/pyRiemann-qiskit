@@ -1,8 +1,15 @@
 """Module containing helpers for IBM quantum backends
    providers and simulators."""
 
-from qiskit_ibm_provider import IBMProvider
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_aer import AerSimulator
+from qiskit_aer.quantum_info import AerStatevector
+from qiskit_machine_learning.kernels import (
+    FidelityStatevectorKernel,
+    FidelityQuantumKernel,
+)
+from qiskit_algorithms.state_fidelities import ComputeUncompute
+import logging
 
 
 def get_provider():
@@ -10,16 +17,18 @@ def get_provider():
 
     Returns
     -------
-    provider : IBMProvider
-        An instance of IBMProvider.
+    provider : QiskitRuntimeService
+        An instance of QiskitRuntimeService.
 
     Notes
     -----
     .. versionadded:: 0.0.4
     .. versionchanged:: 0.1.0
         IBMProvider is not a static API anymore but need to be instanciated.
+    .. versionchanged:: 0.3.0
+        Switch from IBMProvider to QiskitRuntimeService.
     """
-    return IBMProvider()
+    return QiskitRuntimeService(channel="ibm_quantum")
 
 
 def get_simulator():
@@ -46,7 +55,7 @@ def get_simulator():
     return backend
 
 
-def get_devices(provider, min_qubits):
+def get_device(provider, min_qubits):
     """Returns all real remote quantum backends.
 
     Returns all real remote quantum backends,
@@ -73,19 +82,61 @@ def get_devices(provider, min_qubits):
     Notes
     -----
     .. versionadded:: 0.0.4
+    .. versionchanged:: 0.3.0
+        Rename get_devices to get_device
+        Switch from IBMProvider to QiskitRuntimeService
     """
 
-    def filters(device):
-        return (
-            device.configuration().n_qubits >= min_qubits
-            and not device.configuration().simulator
-            and device.status().operational
+    return provider.least_busy(
+        operational=True, simulator=False, min_num_qubits=min_qubits
+    )
+
+
+def get_quantum_kernel(feature_map, quantum_instance, use_fidelity_state_vector_kernel):
+    """Get a quantum kernel
+
+    Return an instance of FidelityQuantumKernel or
+    FidelityStatevectorKernel (in the case of a simulation).
+
+    Parameters
+    ----------
+    feature_map: QuantumCircuit | FeatureMap
+        An instance of a feature map.
+    quantum_instance: BaseSampler
+        A instance of BaseSampler.
+    use_fidelity_state_vector_kernel: boolean
+        if True, use a FidelitystatevectorKernel for simulation.
+
+    Returns
+    -------
+    kernel: QuantumKernel
+        The quantum kernel.
+
+    Notes
+    -----
+    .. versionadded:: 0.3.0
+    """
+    if use_fidelity_state_vector_kernel and isinstance(
+        quantum_instance._backend, AerSimulator
+    ):
+        logging.log(
+            logging.WARN,
+            """FidelityQuantumKernel skipped because of time.
+                    Using FidelityStatevectorKernel with AerStatevector.
+                    Seed cannot be set with FidelityStatevectorKernel.
+                    Increase the number of shots to diminish the noise.""",
         )
 
-    devices = provider.backends(filters=filters)
-    if devices is None or len(devices) == 0:
-        raise ValueError(
-            "No devices matching: real quantum backend, operational and n_qubits>="
-            + min_qubits
+        # if this is a simulation,
+        # we will not use FidelityQuantumKernel as it is slow. See
+        # https://github.com/qiskit-community/qiskit-machine-learning/issues/547#issuecomment-1486527297
+        kernel = FidelityStatevectorKernel(
+            feature_map=feature_map,
+            statevector_type=AerStatevector,
+            shots=quantum_instance.options["shots"],
         )
-    return devices
+    else:
+        kernel = FidelityQuantumKernel(
+            feature_map=feature_map, fidelity=ComputeUncompute(quantum_instance)
+        )
+    return kernel

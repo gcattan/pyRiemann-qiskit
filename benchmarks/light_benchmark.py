@@ -11,7 +11,7 @@ to run on Ci with each PRs.
 # Modified from plot_classify_P300_bi.py of pyRiemann
 # License: BSD (3-clause)
 
-from pyriemann.estimation import XdawnCovariances
+from pyriemann.estimation import XdawnCovariances, Shrinkage
 from pyriemann.tangentspace import TangentSpace
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
@@ -27,6 +27,7 @@ from pyriemann_qiskit.pipelines import (
     QuantumClassifierWithDefaultRiemannianPipeline,
     QuantumMDMWithRiemannianPipeline,
 )
+from pyriemann_qiskit.classification import QuanticNCH
 import warnings
 import sys
 
@@ -77,18 +78,26 @@ pipelines["RG_QSVM"] = QuantumClassifierWithDefaultRiemannianPipeline(
     shots=100,
     nfilter=2,
     dim_red=PCA(n_components=5),
+    params={"seed": 42, "use_fidelity_state_vector_kernel": True},
 )
 
 pipelines["RG_VQC"] = QuantumClassifierWithDefaultRiemannianPipeline(
-    shots=100, spsa_trials=5, two_local_reps=2
+    shots=100, spsa_trials=1, two_local_reps=2, params={"seed": 42}
 )
 
 pipelines["QMDM_mean"] = QuantumMDMWithRiemannianPipeline(
-    convex_metric="mean", quantum=True
+    metric={"mean": "qeuclid", "distance": "euclid"},
+    quantum=True,
+    regularization=Shrinkage(shrinkage=0.9),
+    shots=1024,
+    seed=696288,
 )
 
 pipelines["QMDM_dist"] = QuantumMDMWithRiemannianPipeline(
-    convex_metric="distance", quantum=True
+    metric={"mean": "logeuclid", "distance": "qlogeuclid_hull"},
+    quantum=True,
+    seed=42,
+    shots=100,
 )
 
 pipelines["RG_LDA"] = make_pipeline(
@@ -100,6 +109,23 @@ pipelines["RG_LDA"] = make_pipeline(
     TangentSpace(),
     PCA(n_components=5),
     LDA(solver="lsqr", shrinkage="auto"),
+)
+
+pipelines["NCH_MIN_HULL"] = make_pipeline(
+    XdawnCovariances(
+        nfilter=3,
+        # classes=[labels_dict["Target"]],
+        estimator="lwf",
+        xdawn_estimator="scm",
+    ),
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        subsampling="min",
+        quantum=False,
+        shots=100,
+    ),
 )
 
 ##############################################################################
@@ -126,7 +152,7 @@ print("Scores: ", scores)
 
 
 def set_output(key: str, value: str):
-    print(f"::set-output name={key}::{value}")
+    print(f"::set-output name={key}::{value}")  # noqa: E231
 
 
 is_pr = sys.argv[1] == "pr"
@@ -140,5 +166,9 @@ else:
     for key, score in scores.items():
         i = i + 1
         pr_score = sys.argv[i]
-        success = success and (True if float(pr_score) >= score else False)
+        pr_score_trun = int(float(pr_score) * 100)
+        score_trun = int(score * 100)
+        better_pr_score = pr_score_trun >= score_trun
+        success = success and better_pr_score
+        print(f"{key}: {pr_score_trun} (PR) >= {score_trun} (main): {better_pr_score}")
     set_output("success", "1" if success else "0")

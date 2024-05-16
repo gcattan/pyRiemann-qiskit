@@ -8,12 +8,14 @@ It is for example suitable for:
 import math
 import numpy as np
 from docplex.mp.vartype import ContinuousVarType, IntegerVarType, BinaryVarType
-from qiskit.utils import QuantumInstance
-from qiskit.algorithms import QAOA
+from qiskit.primitives import BackendSampler
+from qiskit_algorithms import QAOA
+from qiskit_algorithms.optimizers import SLSQP
 from qiskit_optimization.algorithms import CobylaOptimizer, MinimumEigenOptimizer
 from qiskit_optimization.converters import IntegerToBinary
 from qiskit_optimization.translators import from_docplex_mp
-from pyriemann_qiskit.utils import cov_to_corr_matrix, get_simulator
+from pyriemann.utils.covariance import normalize
+from pyriemann_qiskit.utils import get_simulator
 
 
 _global_optimizer = [None]
@@ -25,7 +27,7 @@ def set_global_optimizer(optimizer):
     Parameters
     ----------
     optimizer: pyQiskitOptimizer
-      An instance of pyQiskitOptimizer.
+      An instance of :class:`pyriemann_qiskit.utils.docplex.pyQiskitOptimizer`.
 
     Notes
     -----
@@ -40,7 +42,7 @@ def get_global_optimizer(default):
     Parameters
     ----------
     default: pyQiskitOptimizer
-      An instance of pyQiskitOptimizer.
+      An instance of :class:`pyriemann_qiskit.utils.docplex.pyQiskitOptimizer`.
       It will be returned by default if the global optimizer is None.
 
     Returns
@@ -307,19 +309,32 @@ class ClassicalOptimizer(pyQiskitOptimizer):
 
     """Wrapper for the classical Cobyla optimizer.
 
+    Attributes
+    ----------
+    optimizer : OptimizationAlgorithm
+        An instance of OptimizationAlgorithm [1]_
+
     Notes
     -----
     .. versionadded:: 0.0.2
     .. versionchanged:: 0.0.4
+    .. versionchanged:: 0.2.0
+        Add attribute `optimizer`.
 
     See Also
     --------
     pyQiskitOptimizer
 
+    References
+    ----------
+    .. [1] \
+        https://qiskit-community.github.io/qiskit-optimization/stubs/qiskit_optimization.algorithms.OptimizationAlgorithm.html#optimizationalgorithm
+
     """
 
-    def __init__(self):
+    def __init__(self, optimizer=CobylaOptimizer(rhobeg=2.1, rhoend=0.000001)):
         pyQiskitOptimizer.__init__(self)
+        self.optimizer = optimizer
 
     """Helper to create a docplex representation of a
     covariance matrix variable.
@@ -360,7 +375,7 @@ class ClassicalOptimizer(pyQiskitOptimizer):
         return square_cont_mat_var(prob, channels, name)
 
     def _solve_qp(self, qp, reshape=True):
-        result = CobylaOptimizer(rhobeg=2.1, rhoend=0.000001).solve(qp).x
+        result = self.optimizer.solve(qp).x
         if reshape:
             n_channels = int(math.sqrt(result.shape[0]))
             return np.reshape(result, (n_channels, n_channels))
@@ -400,29 +415,41 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
 
     """Wrapper for the quantum optimizer QAOA.
 
-    Attributes
+    Parameters
     ----------
     upper_bound : int (default: 7)
         The maximum integer value for matrix normalization.
     quantum_instance: QuantumInstance (default: None)
         A quantum backend instance.
         If None, AerSimulator will be used.
+    optimizer: SciPyOptimizer (default: SLSQP)
+        An instance of a scipy optimizer to find the optimal weights for the
+        parametric circuit (ansatz).
 
     Notes
     -----
     .. versionadded:: 0.0.2
     .. versionchanged:: 0.0.4
-        add get_weights method
+        add get_weights method.
+    .. versionchanged:: 0.3.0
+        add evaluated_values_ attribute.
+        add optimizer parameter.
+
+    Attributes
+    ----------
+    evaluated_values_ : list[int]
+        Training curve values.
 
     See Also
     --------
     pyQiskitOptimizer
     """
 
-    def __init__(self, upper_bound=7, quantum_instance=None):
+    def __init__(self, upper_bound=7, quantum_instance=None, optimizer=SLSQP()):
         pyQiskitOptimizer.__init__(self)
         self.upper_bound = upper_bound
         self.quantum_instance = quantum_instance
+        self.optimizer = optimizer
 
     """Transform all values in the covariance matrix
     to integers.
@@ -447,7 +474,7 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
     """
 
     def convert_covmat(self, covmat):
-        corr = cov_to_corr_matrix(covmat)
+        corr = normalize(covmat, "corr")
         return np.round(corr * self.upper_bound, 0)
 
     """Helper to create a docplex representation of a
@@ -493,10 +520,26 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         qubo = conv.convert(qp)
         if self.quantum_instance is None:
             backend = get_simulator()
-            quantum_instance = QuantumInstance(backend)
+            seed = 42
+            shots = 1024
+            quantum_instance = BackendSampler(
+                backend, options={"shots": shots, "seed_simulator": seed}
+            )
+            quantum_instance.transpile_options["seed_transpiler"] = seed
         else:
             quantum_instance = self.quantum_instance
-        qaoa_mes = QAOA(quantum_instance=quantum_instance, initial_point=[0.0, 0.0])
+
+        self.evaluated_values_ = []
+
+        def _callback(_eval_count, _weights, value, _meta):
+            self.evaluated_values_.append(value)
+
+        qaoa_mes = QAOA(
+            sampler=quantum_instance,
+            optimizer=self.optimizer,
+            initial_point=[0.0, 0.0],
+            callback=_callback,
+        )
         qaoa = MinimumEigenOptimizer(qaoa_mes)
         result = conv.interpret(qaoa.solve(qubo))
         if reshape:
