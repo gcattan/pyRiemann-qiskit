@@ -13,16 +13,17 @@ import logging
 from qiskit_algorithms.utils import algorithm_globals
 algorithm_globals.seed = 42
 
-def ansatz(num_qubits):
+def _ansatz(num_qubits):
     return RealAmplitudes(num_qubits, reps=5)
 
-def auto_encoder_circuit(num_latent, num_trash):
+def _auto_encoder_circuit(num_latent, num_trash):
     qr = QuantumRegister(num_latent + 2 * num_trash + 1, "q")
     cr = ClassicalRegister(1, "c")
     circuit = QuantumCircuit(qr, cr)
-    circuit.compose(ansatz(num_latent + num_trash), range(0, num_latent + num_trash), inplace=True)
+    circuit.compose(_ansatz(num_latent + num_trash), range(0, num_latent + num_trash), inplace=True)
     circuit.barrier()
     auxiliary_qubit = num_latent + 2 * num_trash
+
     # swap test
     circuit.h(auxiliary_qubit)
     for i in range(num_trash):
@@ -33,92 +34,138 @@ def auto_encoder_circuit(num_latent, num_trash):
     return circuit
 
 class BasicQnnAutoencoder(TransformerMixin):
+    
+    """Quantum denoising
 
-    def __init__(self, num_latent=3, num_trash=2, opt = SPSA(maxiter=100, blocking=True)):
+    This class implements a quantum auto encoder. 
+    The implementation was adapted from [1]_, to be compatible with scikit-learn.
+
+    Parameters
+    ----------
+    num_latent : int, default=3
+        The number of qubits in the latent space
+    num_trash : int, default=2
+        The number of qubits in the trash space
+    opt : Optimizer, default=SPSA
+        The classical optimizer to use.
+
+    Notes
+    -----
+    .. versionadded:: 0.3.0
+
+    Attributes
+    ----------
+    costs_ : list
+        The values of the cost function.
+    fidelities_ : list, shape(n_trials,)
+        fidelities (one fidelity for each trial)
+
+    References
+    ----------
+    .. [1] \
+      https://qiskit-community.github.io/qiskit-machine-learning/tutorials/12_quantum_autoencoder.html
+
+    """
+
+    def __init__(self, num_latent=3, num_trash=2, opt=SPSA(maxiter=100, blocking=True)):
         self.num_latent = num_latent
         self.num_trash = num_trash
         self.opt = opt
-        self.cost = []
-        self.iter = 0
+      
+    def _log(self, msg):
+       logging.info(f"[BasicQnnAutoencoder] {msg}")
+    
+    def _get_transformer(self):
+        # encoder
+        transformer = QuantumCircuit(self.n_qubits)
+        transformer = transformer.compose(self._feature_map)
+        ansatz_qc = _ansatz(self.n_qubits)
+        transformer = transformer.compose(ansatz_qc)
+        transformer.barrier()
 
-    def fit(self, X, _y=None, **kwargs):
-        _, n_features = X.shape
-
-        n_qubits = self.num_latent + self.num_trash
-        print(f'raw feature size: {2 ** n_qubits} and feature size: {n_features}')
-        assert 2 ** n_qubits == n_features
-
-        self.fm = RawFeatureVector(2 ** n_qubits)
-
-        self.ae = auto_encoder_circuit(self.num_latent, self.num_trash)
-
-        qc = QuantumCircuit(self.num_latent + 2 * self.num_trash + 1, 1)
-        qc = qc.compose(self.fm, range(n_qubits))
-        qc = qc.compose(self.ae)
-
-        qnn = SamplerQNN(
-            circuit=qc,
-            input_params=self.fm.parameters,
-            weight_params=self.ae.parameters,
-            interpret=lambda x: x,
-            output_shape=2,
-        )
-        
-        opt = SPSA(maxiter=100, blocking=True)
-
-        def cost_func(params_values):
-          self.iter += 1
-          if self.iter % 10 == 0:
-            logging.info(f"[BasicQnnAutoencoder] Iteration {self.iter}")
-          probabilities = qnn.forward(X, params_values)
-          cost = np.sum(probabilities[:, 1]) / X.shape[0]
-          self.cost.append(cost)
-          return cost
-
-        
-        initial_point = algorithm_globals.random.random(self.ae.num_parameters)
-        opt_result = opt.minimize(
-            fun=cost_func,
-            x0=initial_point)
-
-        # encoder/decoder circuit
-
-        test_qc = QuantumCircuit(n_qubits)
-        test_qc = test_qc.compose(self.fm)
-        ansatz_qc = ansatz(n_qubits)
-        test_qc = test_qc.compose(ansatz_qc)
-        test_qc.barrier()
+        # trash space
         for i in range(self.num_trash):
-          test_qc.reset(self.num_latent + i)
-        test_qc.barrier()
-        test_qc = test_qc.compose(ansatz_qc.inverse())
-        self.test_qc = test_qc
-        self.opt_result = opt_result
+          transformer.reset(self.num_latent + i)
+        transformer.barrier()
 
-        # compute fidelity
+        # decoder
+        transformer = transformer.compose(ansatz_qc.inverse())
+        self._transformer = transformer
+        return transformer
+
+    def _compute_fidelities(self, X):
         fidelities = []
         for trial in X:
-          param_values = np.concatenate((trial, self.opt_result.x))
-          output_qc = test_qc.assign_parameters(param_values)
+          param_values = np.concatenate((trial, self._opt_result.x))
+          output_qc = self._transformer.assign_parameters(param_values)
           output_state = Statevector(output_qc).data
 
-          original_qc = self.fm.assign_parameters(trial)
+          original_qc = self._feature_map.assign_parameters(trial)
           original_state = Statevector(original_qc).data
 
           fidelity = np.sqrt(np.dot(original_state.conj(), output_state) ** 2)
           fidelities.append(fidelity.real)
+        return fidelities
+      
+    def fit(self, X, _y=None, **kwargs):
+        _, n_features = X.shape
+
+        self.costs_ = []
+        self.fidelities_ = []
+        self._iter = 0
+
+        n_qubits = self.num_latent + self.num_trash
+        self._log(f'raw feature size: {2 ** n_qubits} and feature size: {n_features}')
+        assert 2 ** n_qubits == n_features
+
+        self._feature_map = RawFeatureVector(2 ** n_qubits)
+
+        self._auto_encoder = _auto_encoder_circuit(self.num_latent, self.num_trash)
+
+        qc = QuantumCircuit(self.num_latent + 2 * self.num_trash + 1, 1)
+        qc = qc.compose(self._feature_map, range(n_qubits))
+        qc = qc.compose(self._auto_encoder)
+
+        qnn = SamplerQNN(
+            circuit=qc,
+            input_params=self._feature_map.parameters,
+            weight_params=self._auto_encoder.parameters,
+            interpret=lambda x: x,
+            output_shape=2,
+        )
+
+        def cost_func(params_values):
+          self._iter += 1
+          if self._iter % 10 == 0:
+            self._log(f"Iteration {self._iter}")
+
+          probabilities = qnn.forward(X, params_values)
+          cost = np.sum(probabilities[:, 1]) / X.shape[0]
+          self.costs_.append(cost)
+          return cost
+
         
-        print(f"fidelity: {np.mean(fidelities)}")
+        initial_point = algorithm_globals.random.random(self._auto_encoder.num_parameters)
+        self._opt_result = self.opt.minimize(
+            fun=cost_func,
+            x0=initial_point)
+
+        # encoder/decoder circuit
+        self._transformer = self._get_transformer()
+
+        # compute fidelity
+        self.fidelities_ = self._compute_fidelities(X)
+        
+        self._log(f"Mean fidelity: {np.mean(self.fidelities_)}")
 
         return self
 
     def transform(self, X, **kwargs):
-        print(self.cost)
         _, n_features = X.shape
         outputs = []
         for trial in X:
-          param_values = np.concatenate((trial, self.opt_result.x))
-          output_qc = self.test_qc.assign_parameters(param_values)
+          param_values = np.concatenate((trial, self._opt_result.x))
+          output_qc = self._transformer.assign_parameters(param_values)
           output_sv = Statevector(output_qc).data
           output_sv = np.reshape(np.abs(output_sv) ** 2, n_features)
           outputs.append(output_sv)
