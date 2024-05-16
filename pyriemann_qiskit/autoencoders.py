@@ -2,11 +2,14 @@ import numpy as np
 from qiskit import ClassicalRegister, QuantumRegister
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
-from qiskit_algorithms.optimizers import COBYLA, ADAM, SLSQP, SPSA
+from qiskit_algorithms.optimizers import SPSA
 from qiskit.quantum_info import Statevector
 
 from qiskit_machine_learning.circuit.library import RawFeatureVector
 from qiskit_machine_learning.neural_networks import SamplerQNN
+from sklearn.base import TransformerMixin
+import logging
+
 from qiskit_algorithms.utils import algorithm_globals
 algorithm_globals.seed = 42
 
@@ -29,15 +32,12 @@ def auto_encoder_circuit(num_latent, num_trash):
     circuit.measure(auxiliary_qubit, cr[0])
     return circuit
 
-from sklearn.base import TransformerMixin
-from sklearn.preprocessing import RobustScaler
-
-
 class BasicQnnAutoencoder(TransformerMixin):
 
-    def __init__(self, num_latent=3, num_trash=2):
+    def __init__(self, num_latent=3, num_trash=2, opt = SPSA(maxiter=100, blocking=True)):
         self.num_latent = num_latent
         self.num_trash = num_trash
+        self.opt = opt
         self.cost = []
         self.iter = 0
 
@@ -48,14 +48,9 @@ class BasicQnnAutoencoder(TransformerMixin):
         print(f'raw feature size: {2 ** n_qubits} and feature size: {n_features}')
         assert 2 ** n_qubits == n_features
 
-        circuit = auto_encoder_circuit(self.num_latent, self.num_trash)
-        #circuit.draw("mpl",reverse_bits=True)
-
-
         self.fm = RawFeatureVector(2 ** n_qubits)
 
         self.ae = auto_encoder_circuit(self.num_latent, self.num_trash)
-
 
         qc = QuantumCircuit(self.num_latent + 2 * self.num_trash + 1, 1)
         qc = qc.compose(self.fm, range(n_qubits))
@@ -70,15 +65,11 @@ class BasicQnnAutoencoder(TransformerMixin):
         )
         
         opt = SPSA(maxiter=100, blocking=True)
-        # opt = ADAM(maxiter=1000)
-        # opt = COBYLA(maxiter=1000)
-        # opt = SLSQP(maxiter=1000)
 
         def cost_func(params_values):
           self.iter += 1
           if self.iter % 10 == 0:
-            # print(self.iter, opt._t)
-            print(self.iter)
+            logging.info(f"[BasicQnnAutoencoder] Iteration {self.iter}")
           probabilities = qnn.forward(X, params_values)
           cost = np.sum(probabilities[:, 1]) / X.shape[0]
           self.cost.append(cost)
