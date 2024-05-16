@@ -14,21 +14,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from pyriemann.tangentspace import TangentSpace
 from pyriemann.estimation import XdawnCovariances, ERPCovariances, Covariances
 from pyriemann.preprocessing import Whitening
-from moabb.datasets import (
-    # bi2012,
-    # bi2013a,
-    # bi2014a,
-    # bi2014b,
-    # bi2015a,
-    # bi2015b,
-    # BNCI2014008,
-    BNCI2014009,
-    # BNCI2015003,
-    # EPFLP300,
-    # Lee2019_ERP,
-)
+from moabb.datasets import Hinss2021
 from sklearn.base import BaseEstimator, TransformerMixin
-from qword_dataset import Neuroergonomics2021Dataset
 from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation
 from moabb.paradigms import P300
 from sklearn.decomposition import PCA
@@ -65,19 +52,7 @@ from moabb.paradigms import RestingStateToP300Adapter
 events = dict(easy=2, medium=3)
 paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.5)
 
-# paradigm = P300()
-
-# Datasets:
-# name, electrodes, subjects
-# bi2013a	    16	24 (normal)
-# bi2014a    	16	64 (usually low performance)
-# BNCI2014009	16	10 (usually high performance)
-# BNCI2014008	 8	 8
-# BNCI2015003	 8	10
-# bi2015a        32  43
-# bi2015b        32  44
-
-datasets = [Neuroergonomics2021Dataset()]
+datasets = [Hinss2021()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
@@ -132,17 +107,17 @@ class Devectorizer(TransformerMixin):
         return X.reshape((n_trial, 8, 64))
 
 
-pipelines["LDA_denoised"] = make_pipeline(
-    # select only 2 components
-    Xdawn(nfilter=4),
-    Vectorizer(),
-    BasicQnnAutoencoder(8, 1),
-    Devectorizer(),
-    Covariances(),
-    TangentSpace(),
-    # PCA(n_components=4),
-    LDA()
-)
+# pipelines["LDA_denoised"] = make_pipeline(
+#     # select only 2 components
+#     Xdawn(nfilter=4),
+#     Vectorizer(),
+#     BasicQnnAutoencoder(8, 1),
+#     Devectorizer(),
+#     Covariances(),
+#     TangentSpace(),
+#     # PCA(n_components=4),
+#     LDA()
+# )
 
 pipelines["LDA"] = make_pipeline(
     Xdawn(nfilter=4),
