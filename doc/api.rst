@@ -100,6 +100,8 @@ Preprocessing
     :toctree: generated/
 
     NdRobustScaler
+    Vectorizer
+    Devectorizer
 
 Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +113,6 @@ Filtering
 
     NoDimRed
     NaiveDimRed
-    Vectorizer
 
 Mean
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

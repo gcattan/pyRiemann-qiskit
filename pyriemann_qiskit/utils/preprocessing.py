@@ -72,70 +72,71 @@ class NdRobustScaler(TransformerMixin):
             X[:, i, :] = self._scalers[i].transform(X[:, i, :])
         return X
 
-class EpochSelectChannel(TransformerMixin):
-    """Apply one robust scaler by feature.
 
-    Select channels based on covariance information, 
-    keeping only the channel with the maximum covariance.
 
-    Work on signal epochs.
+class Vectorizer(BaseEstimator, TransformerMixin):
+    """Vectorization.
+
+    This is an auxiliary transformer that allows one to vectorize data
+    structures in a pipeline. For instance, in the case of an X with
+    dimensions (n_samples, n_features, n_channels),
+    one might be interested in a new data structure with dimensions
+    (n_samples, n_features x n_channels)
 
     Notes
     -----
-    .. versionadded:: 0.3.0
+    .. versionadded:: 0.0.1
+    .. versionchanged:: 0.3.0
+        Move from filtering to preprocessing module.
+        Fix documentation.
+
     """
 
-    def __init__(self, n_chan):
-        self.n_chan = n_chan
+    def __init__(self):
+        pass
 
-    """Fits one robust scaler on each feature of the training data.
+    def fit(self, X, y):
+        """Fit the training data.
 
-    Parameters
-    ----------
-    X : ndarray, shape (n_matrices, n_features, n_samples)
-        Training matrices.
-    _y : ndarray, shape (n_samples,)
-        Unused. Kept for scikit-learn compatibility.
+        Parameters
+        ----------
+        X : ndarray, shape (n_trials, n_features, n_times)
+            Training matrices.
+        y : ndarray, shape (n_trials,) (default: None)
+            Target vector relative to X.
+            In practice, never used.
 
-    Returns
-    -------
-    self : EpochSelectChannel instance
-        The EpochSelectChannel instance.
-    """
-
-    def fit(self, X, _y=None, **kwargs):
-        covs = Covariances(estimator='lwf').fit_transform(X)
-        m = np.mean(covs, axis=0)
-        n_feats, _ = m.shape
-        all_max = []
-        for i in range(n_feats):
-            for j in range(n_feats):
-                if len(all_max) <= self.n_chan:
-                    all_max.append(m[i, j])
-                else:
-                    if m[i, j] > max(all_max):
-                        all_max[np.argmin(all_max)] = m[i, j]
-        indices = []
-        for v in all_max:
-            indices.extend(np.argwhere(m == v).flatten())
-
-        indices = np.unique(indices)
-        self._elec = indices
+        Returns
+        -------
+        self : Vectorizer instance
+            The Vectorizer instance.
+        """
         return self
 
-    """Select channels based on the computed covariance.
+    def transform(self, X):
+        """Vectorize matrices.
 
-    Parameters
-    ----------
-    X : ndarray, shape (n_matrices, n_features, n_samples)
-        Matrices to scale.
-    _y : ndarray, shape (n_samples,)
-        Unused. Kept for scikit-learn compatibility.
+        Parameters
+        ----------
+        X : ndarray, shape (n_trials, n_features, n_times)
+            The matrices to vectorize.
 
-    Returns
-    -------
-    self : ndarray, shape (n_matrices, n_chan, n_samples)
-        Matrices with only the selected channel.
-    """
-    def transform(self, X, **kwargs):
-        return X[:, self._elec, :]
+        Returns
+        -------
+        X : ndarray, shape (n_trials, n_features x n_times)
+            The vectorized matrices.
+        """
+        return np.reshape(X, (X.shape[0], -1))
+
+class Devectorizer(TransformerMixin):
+    def __init__(self, n_feats, n_times):
+        self.n_feats = n_feats
+        self.n_times = n_times
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        n_trial, _ = X.shape
+        print(X.shape)
+        return X.reshape((n_trial, self.n_feats, self.n_times))

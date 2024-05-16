@@ -28,6 +28,7 @@ from sklearn.decomposition import PCA
 # )
 from sklearn.pipeline import make_pipeline
 from pyriemann_qiskit.autoencoders import BasicQnnAutoencoder
+from pyriemann_qiskit.utils.preprocessing import Vectorizer, Devectorizer
 from pyriemann.spatialfilters import Xdawn
 
 print(__doc__)
@@ -80,53 +81,28 @@ labels_dict = {"Target": 1, "NonTarget": 0}
 
 pipelines = {}
 
-
-class Vectorizer(TransformerMixin):
-    def __init__(self, is_even=True):
-        self.is_even = is_even
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X, y=None):
-        n_trial, n_features, n_samples = X.shape
-        print(X.shape)
-        return X.reshape((n_trial, n_features * n_samples))
-
-
-class Devectorizer(TransformerMixin):
-    def __init__(self, is_even=True):
-        self.is_even = is_even
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X, y=None):
-        n_trial, _ = X.shape
-        print(X.shape)
-        return X.reshape((n_trial, 8, 64))
-
-
-# pipelines["LDA_denoised"] = make_pipeline(
-#     # select only 2 components
-#     Xdawn(nfilter=4),
-#     Vectorizer(),
-#     BasicQnnAutoencoder(8, 1),
-#     Devectorizer(),
-#     Covariances(),
-#     TangentSpace(),
-#     # PCA(n_components=4),
-#     LDA()
-# )
-
-pipelines["LDA"] = make_pipeline(
-    Xdawn(nfilter=4),
+n_times = 64
+n_filter = 4
+n_classes = 2
+n_components = n_classes * n_filter
+pipelines["LDA_denoised"] = make_pipeline(
+    # select only 2 components
+    Xdawn(nfilter=n_filter),
     Vectorizer(),
-    Devectorizer(),
+    BasicQnnAutoencoder(n_components, 1),
+    Devectorizer(n_components, n_times),
     Covariances(),
-    # Whitening(dim_red={"n_components": 2}),
     TangentSpace(),
     # PCA(n_components=4),
+    LDA()
+)
+
+pipelines["LDA"] = make_pipeline(
+    Xdawn(nfilter=4), # Replace by electrodes selection
+    Vectorizer(),
+    Devectorizer(n_components, n_times),
+    Covariances(),
+    TangentSpace(),
     LDA()
 )
 
