@@ -108,6 +108,21 @@ class BasicQnnAutoencoder(TransformerMixin):
         return fidelities
       
     def fit(self, X, _y=None, **kwargs):
+        """Fit the autoencoder.
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_trials, n_feats)
+            Set of time epochs.
+            n_feats must equal 2 ** n_qubits, 
+            where n_qubit = num_trash + num_latent.
+
+        Returns
+        -------
+        self : BasicQnnAutoencoder
+            The BasicQnnAutoencoder instance.
+        """
+
         _, n_features = X.shape
 
         self.costs_ = []
@@ -161,6 +176,21 @@ class BasicQnnAutoencoder(TransformerMixin):
         return self
 
     def transform(self, X, **kwargs):
+        """Apply the transformer circuit.
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_trials, n_feats)
+            Set of time epochs.
+            n_feats must equal 2 ** n_qubits, 
+            where n_qubit = num_trash + num_latent.
+
+        Returns
+        -------
+        outputs : ndarray, shape (n_trials, 2 ** n_qubits)
+            The autocoded trial. n_qubits = num_trash + num_latent.
+        """
+
         _, n_features = X.shape
         outputs = []
         for trial in X:
