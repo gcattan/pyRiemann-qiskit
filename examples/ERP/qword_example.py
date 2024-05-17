@@ -15,7 +15,7 @@ from pyriemann.tangentspace import TangentSpace
 from pyriemann.estimation import XdawnCovariances, ERPCovariances, Covariances
 from pyriemann.preprocessing import Whitening
 from moabb.datasets import Hinss2021
-from sklearn.base import BaseEstimator, TransformerMixin
+
 from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation
 from moabb.paradigms import P300
 from sklearn.decomposition import PCA
