@@ -4,12 +4,11 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_algorithms.optimizers import SPSA
 from qiskit.quantum_info import Statevector
-
 from qiskit_machine_learning.circuit.library import RawFeatureVector
 from qiskit_machine_learning.neural_networks import SamplerQNN
+from qiskit_algorithms.utils import algorithm_globals
 from sklearn.base import TransformerMixin
 import logging
-
 
 def _ansatz(num_qubits):
     return RealAmplitudes(num_qubits, reps=5)
@@ -70,9 +69,9 @@ class BasicQnnAutoencoder(TransformerMixin):
     ----------
     .. [1] \
         https://qiskit-community.github.io/qiskit-machine-learning/tutorials/12_quantum_autoencoder.html
-    .. [2] \
-        A. Mostafa et al., 2024
-        ‘Quantum Denoising in the Realm of Brain-Computer Interfaces: A Preliminary Study’,
+    .. [2] A. Mostafa et al., 2024 \
+        ‘Quantum Denoising in the Realm of Brain-Computer Interfaces:
+        A Preliminary Study’,
         https://hal.science/hal-04501908
 
 
