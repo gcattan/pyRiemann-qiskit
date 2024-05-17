@@ -1,4 +1,5 @@
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
+from pyriemann.estimation import Covariances
 import numpy as np
 
 
@@ -116,12 +117,17 @@ class NaiveDimRed(TransformerMixin):
 
 
 class EpochSelectChannel(TransformerMixin):
-    """Apply one robust scaler by feature.
+    """Select channel in epochs.
 
     Select channels based on covariance information, 
     keeping only the channel with the maximum covariance.
 
     Work on signal epochs.
+
+    Parameters
+    ----------
+    n_chan : int
+        The number of channels to select.
 
     Notes
     -----
@@ -131,25 +137,29 @@ class EpochSelectChannel(TransformerMixin):
     def __init__(self, n_chan):
         self.n_chan = n_chan
 
-    """Fits one robust scaler on each feature of the training data.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_matrices, n_features, n_samples)
-        Training matrices.
-    _y : ndarray, shape (n_samples,)
-        Unused. Kept for scikit-learn compatibility.
-
-    Returns
-    -------
-    self : EpochSelectChannel instance
-        The EpochSelectChannel instance.
-    """
 
     def fit(self, X, _y=None, **kwargs):
-        covs = Covariances(estimator='lwf').fit_transform(X)
+        """Select channel based on covariances
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_matrices, n_features, n_samples)
+            Training matrices.
+        _y : ndarray, shape (n_samples,)
+            Unused. Kept for scikit-learn compatibility.
+
+        Returns
+        -------
+        self : EpochSelectChannel instance
+            The EpochSelectChannel instance.
+        """
+
+        # Get the covariances of the channels for each epoch.
+        covs = Covariances(estimator=self.cov_est).fit_transform(X)
+        # Get the average covariance between the channels
         m = np.mean(covs, axis=0)
         n_feats, _ = m.shape
+        # Select the `n_chan` channels having the maximum covariances.
         all_max = []
         for i in range(n_feats):
             for j in range(n_feats):
@@ -161,24 +171,24 @@ class EpochSelectChannel(TransformerMixin):
         indices = []
         for v in all_max:
             indices.extend(np.argwhere(m == v).flatten())
-
+        # We will keep only these channels for the transform step.
         indices = np.unique(indices)
-        self._elec = indices
+        self._chs_idx = indices
         return self
 
-    """Select channels based on the computed covariance.
-
-    Parameters
-    ----------
-    X : ndarray, shape (n_matrices, n_features, n_samples)
-        Matrices to scale.
-    _y : ndarray, shape (n_samples,)
-        Unused. Kept for scikit-learn compatibility.
-
-    Returns
-    -------
-    self : ndarray, shape (n_matrices, n_chan, n_samples)
-        Matrices with only the selected channel.
-    """
     def transform(self, X, **kwargs):
-        return X[:, self._elec, :]
+        """Select channels based on the computed covariance.
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_matrices, n_features, n_samples)
+            Matrices to scale.
+        _y : ndarray, shape (n_samples,)
+            Unused. Kept for scikit-learn compatibility.
+
+        Returns
+        -------
+        self : ndarray, shape (n_matrices, n_chan, n_samples)
+            Matrices with only the selected channel.
+        """
+        return X[:, self._chs_idx, :]

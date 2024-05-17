@@ -136,8 +136,8 @@ class Devectorizer(TransformerMixin):
     transform vectors of shape (n_feats x n_times)
     into matrices of size (n_feats, n_times)
 
-    Attributes
-    -----
+    Parameters
+    ----------
     n_feats : int
         The number of features of the matrices.
     n_times : int
@@ -189,5 +189,4 @@ class Devectorizer(TransformerMixin):
         """
 
         n_trial, _ = X.shape
-        print(X.shape)
         return X.reshape((n_trial, self.n_feats, self.n_times))
