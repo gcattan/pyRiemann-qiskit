@@ -417,12 +417,12 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
 
     Parameters
     ----------
-    upper_bound : int (default: 7)
+    upper_bound : int, default=7
         The maximum integer value for matrix normalization.
-    quantum_instance: QuantumInstance (default: None)
+    quantum_instance : QuantumInstance, default=None
         A quantum backend instance.
         If None, AerSimulator will be used.
-    optimizer: SciPyOptimizer (default: SLSQP)
+    optimizer : SciPyOptimizer, default=SLSQP()
         An instance of a scipy optimizer to find the optimal weights for the
         parametric circuit (ansatz).
 

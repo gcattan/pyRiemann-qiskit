@@ -662,7 +662,7 @@ class QuanticMDM(QuanticClassifierBase):
         Additional post-processing to regularize means.
     classical_optimizer : OptimizationAlgorithm, default=CobylaOptimizer()
         An instance of OptimizationAlgorithm [3]_.
-    qaoa_optimizer : SciPyOptimizer (default: SLSQP)
+    qaoa_optimizer : SciPyOptimizer, default=SLSQP()
         An instance of a scipy optimizer to find the optimal weights for the
         parametric circuit (ansatz).
 
@@ -1046,7 +1046,7 @@ class QuanticNCH(QuanticClassifierBase):
         Subsampling strategy of training set to estimate distance to hulls.
         "min" estimates hull using the n_samples_per_hull closest matrices.
         "random" estimates hull using n_samples_per_hull random matrices.
-    qaoa_optimizer : SciPyOptimizer (default: SLSQP)
+    qaoa_optimizer : SciPyOptimizer, default=SLSQP()
         An instance of a scipy optimizer to find the optimal weights for the
         parametric circuit (ansatz).
 
