@@ -43,11 +43,15 @@ class BasicQnnAutoencoder(TransformerMixin):
     Parameters
     ----------
     num_latent : int, default=3
-        The number of qubits in the latent space
+        The number of qubits in the latent space.
     num_trash : int, default=2
-        The number of qubits in the trash space
+        The number of qubits in the trash space.
     opt : Optimizer, default=SPSA
         The classical optimizer to use.
+    callback : Callable[int, double] (default : None)
+        An additional callback for the optimizer.
+        The first parameter is the number of cost evaluation call.
+        The second parameter is the cost.
 
     Notes
     -----
@@ -72,10 +76,11 @@ class BasicQnnAutoencoder(TransformerMixin):
 
     """
 
-    def __init__(self, num_latent=3, num_trash=2, opt=SPSA(maxiter=100, blocking=True)):
+    def __init__(self, num_latent=3, num_trash=2, opt=SPSA(maxiter=100, blocking=True), callback=None):
         self.num_latent = num_latent
         self.num_trash = num_trash
         self.opt = opt
+        self.callback = callback
       
     def _log(self, msg):
        logging.info(f"[BasicQnnAutoencoder] {msg}")
@@ -165,6 +170,8 @@ class BasicQnnAutoencoder(TransformerMixin):
           probabilities = qnn.forward(X, params_values)
           cost = np.sum(probabilities[:, 1]) / X.shape[0]
           self.costs_.append(cost)
+          if self.callback:
+             self.callback(self._iter, cost)
           return cost
 
         

@@ -20,10 +20,12 @@ from sklearn.pipeline import make_pipeline
 from pyriemann.tangentspace import TangentSpace
 from moabb.datasets import Hinss2021
 from moabb.evaluations import CrossSessionEvaluation
+from moabb.paradigms import RestingStateToP300Adapter
 from pyriemann_qiskit.autoencoders import BasicQnnAutoencoder
 from pyriemann_qiskit.utils.preprocessing import Vectorizer, Devectorizer
 from pyriemann_qiskit.utils.filtering import EpochChannelSelection
 from pyriemann.estimation import Covariances
+from qiskit_algorithms.optimizers import COBYLA
 
 import logging
 
@@ -31,6 +33,7 @@ print(__doc__)
 
 ##############################################################################
 # getting rid of the warnings about the future
+
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=RuntimeWarning)
 
@@ -39,13 +42,16 @@ warnings.filterwarnings("ignore")
 set_log_level("info")
 
 ##############################################################################
+# Setting logger level to info, to print autoencoders trace.
+
+logging.getLogger('root').setLevel(logging.INFO)
+
+##############################################################################
 # Initialization
 # ----------------
 #
 # 1) Create paradigm
 # 2) Load datasets
-
-from moabb.paradigms import RestingStateToP300Adapter
 
 events = dict(easy=2, medium=3)
 paradigm = RestingStateToP300Adapter(events=events, tmin=0, tmax=0.5)
@@ -54,8 +60,7 @@ datasets = [Hinss2021()]
 
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-start_subject = 14
-stop_subject = 15
+start_subject, stop_subject = 14, 15
 title = "Datasets: "
 for dataset in datasets:
     title = title + " " + dataset.code
@@ -68,6 +73,16 @@ for dataset in datasets:
 labels_dict = {"Target": 1, "NonTarget": 0}
 
 ##############################################################################
+# Define a callback to keep trace of the computed cost.
+
+costs = {}
+def fn_callback(iter, cost):
+    if iter in costs:
+        costs[iter].append(cost)
+    else:
+        costs[iter] = [cost]
+
+##############################################################################
 # Create Pipelines
 # ----------------
 #
@@ -77,12 +92,16 @@ pipelines = {}
 
 n_components, n_times = 8, 64
 
-from qiskit_algorithms.optimizers import SPSA
-
 pipelines["LDA_denoised"] = make_pipeline(
     EpochChannelSelection(n_chan=n_components),
     Vectorizer(),
-    BasicQnnAutoencoder(num_latent=n_components, num_trash=1, opt=SPSA(maxiter=1)),
+    # Use COBYLA with only 1 iteration (this is for the example to plot in Ci/Cd)
+    BasicQnnAutoencoder(
+        num_latent=n_components,
+        num_trash=1,
+        opt=COBYLA(maxiter=10),
+        callback=fn_callback
+    ),
     Devectorizer(n_components, n_times),
     Covariances(),
     TangentSpace(),
@@ -102,25 +121,16 @@ pipelines["LDA"] = make_pipeline(
 # Run evaluation
 # ----------------
 #
-# Compare the pipeline using a within session evaluation.
+# Compare the pipeline using a cross sessions evaluation.
 
-# Here should be cross session
 evaluation = CrossSessionEvaluation(
     paradigm=paradigm,
     datasets=datasets,
     overwrite=True,
+    n_jobs=-1
 )
 
 results = evaluation.process(pipelines)
-
-autoencoder = pipelines["LDA_denoised"].named_steps['basicqnnautoencoder']
-
-print(autoencoder.costs)
-plt.plot(autoencoder.costs)
-plt.xlabel('Epoch')
-plt.ylabel('Cost')
-plt.title('Autoencoder Cost')
-plt.show()
 
 print("Averaging the session performance:")
 print(results.groupby("pipeline").mean("score")[["score", "time"]])
@@ -150,6 +160,23 @@ sns.pointplot(data=results, y="score", x="pipeline", ax=ax, palette="Set1").set(
 ax.set_ylabel("ROC AUC")
 ax.set_ylim(0.3, 1)
 
+plt.show()
+
+##############################################################################
+# Plot the mean cost function
+
+x = []
+y = []
+for iter in costs.keys():
+    x.append(iter)
+    c = costs[iter]
+    y.append(sum(c) / len(c))
+
+plt.plot(x, y)
+plt.xlabel('N of cost evaluation')
+plt.ylabel('Cost')
+plt.title('Autoencoder Cost')
+plt.tight_layout()
 plt.show()
 
 ###############################################################################

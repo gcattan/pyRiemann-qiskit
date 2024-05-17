@@ -120,7 +120,7 @@ class EpochChannelSelection(TransformerMixin):
     """Select channel in epochs.
 
     Select channels based on covariance information, 
-    keeping only the channel with the maximum covariance.
+    keeping only channels with maximum covariancse.
 
     Work on signal epochs.
 
