@@ -1,15 +1,15 @@
 """
-This is a basic example of quantum autoencoders for signal denoising,
+This is a basic example of a quantum autoencoder for signal denoising,
 based on [1]_ and [2]_.
 
-There is no particular advantage of using QNN for such tasks.
+There is no particular advantage in using QNN for such a task.
 
 This is experimental and should be used for research purpose only.
 
 """
 
 # Authors: A. Mostafa, Y. Chauhan, W. Ahmed, and G. Cattan
-
+# License: BSD (3-clause)
 
 from matplotlib import pyplot as plt
 import warnings
@@ -42,7 +42,7 @@ warnings.filterwarnings("ignore")
 set_log_level("info")
 
 ##############################################################################
-# Setting logger level to info, to print autoencoders trace.
+# Setting logger level to info, to print the autoencoder trace.
 
 logging.getLogger("root").setLevel(logging.INFO)
 

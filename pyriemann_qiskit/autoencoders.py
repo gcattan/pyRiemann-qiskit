@@ -10,10 +10,6 @@ from qiskit_machine_learning.neural_networks import SamplerQNN
 from sklearn.base import TransformerMixin
 import logging
 
-from qiskit_algorithms.utils import algorithm_globals
-
-algorithm_globals.seed = 42
-
 
 def _ansatz(num_qubits):
     return RealAmplitudes(num_qubits, reps=5)
