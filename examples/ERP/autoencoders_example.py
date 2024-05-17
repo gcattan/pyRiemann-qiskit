@@ -77,6 +77,7 @@ labels_dict = {"Target": 1, "NonTarget": 0}
 
 costs = {}
 
+
 def fn_callback(iter, cost):
     if iter in costs:
         costs[iter].append(cost)
