@@ -1,5 +1,5 @@
 """
-This is a basic example of quantum autoencoders for signal denoising, 
+This is a basic example of quantum autoencoders for signal denoising,
 based on [1]_ and [2]_.
 
 There is no particular advantage of using QNN for such tasks.
@@ -44,7 +44,7 @@ set_log_level("info")
 ##############################################################################
 # Setting logger level to info, to print autoencoders trace.
 
-logging.getLogger('root').setLevel(logging.INFO)
+logging.getLogger("root").setLevel(logging.INFO)
 
 ##############################################################################
 # Initialization
@@ -76,11 +76,14 @@ labels_dict = {"Target": 1, "NonTarget": 0}
 # Define a callback to keep trace of the computed cost.
 
 costs = {}
+
+
 def fn_callback(iter, cost):
     if iter in costs:
         costs[iter].append(cost)
     else:
         costs[iter] = [cost]
+
 
 ##############################################################################
 # Create Pipelines
@@ -100,12 +103,12 @@ pipelines["LDA_denoised"] = make_pipeline(
         num_latent=n_components,
         num_trash=1,
         opt=COBYLA(maxiter=10),
-        callback=fn_callback
+        callback=fn_callback,
     ),
     Devectorizer(n_components, n_times),
     Covariances(),
     TangentSpace(),
-    LDA()
+    LDA(),
 )
 
 pipelines["LDA"] = make_pipeline(
@@ -114,7 +117,7 @@ pipelines["LDA"] = make_pipeline(
     Devectorizer(n_components, n_times),
     Covariances(),
     TangentSpace(),
-    LDA()
+    LDA(),
 )
 
 ##############################################################################
@@ -124,10 +127,7 @@ pipelines["LDA"] = make_pipeline(
 # Compare the pipeline using a cross sessions evaluation.
 
 evaluation = CrossSessionEvaluation(
-    paradigm=paradigm,
-    datasets=datasets,
-    overwrite=True,
-    n_jobs=-1
+    paradigm=paradigm, datasets=datasets, overwrite=True, n_jobs=-1
 )
 
 results = evaluation.process(pipelines)
@@ -173,9 +173,9 @@ for iter in costs.keys():
     y.append(sum(c) / len(c))
 
 plt.plot(x, y)
-plt.xlabel('N of cost evaluation')
-plt.ylabel('Cost')
-plt.title('Autoencoder Cost')
+plt.xlabel("N of cost evaluation")
+plt.ylabel("Cost")
+plt.title("Autoencoder Cost")
 plt.tight_layout()
 plt.show()
 

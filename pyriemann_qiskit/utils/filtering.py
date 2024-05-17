@@ -115,11 +115,10 @@ class NaiveDimRed(TransformerMixin):
         return X[:, offset::2]
 
 
-
 class EpochChannelSelection(TransformerMixin):
     """Select channel in epochs.
 
-    Select channels based on covariance information, 
+    Select channels based on covariance information,
     keeping only channels with maximum covariancse.
 
     Work on signal epochs.

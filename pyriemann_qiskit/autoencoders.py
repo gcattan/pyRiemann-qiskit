@@ -11,16 +11,21 @@ from sklearn.base import TransformerMixin
 import logging
 
 from qiskit_algorithms.utils import algorithm_globals
+
 algorithm_globals.seed = 42
+
 
 def _ansatz(num_qubits):
     return RealAmplitudes(num_qubits, reps=5)
+
 
 def _auto_encoder_circuit(num_latent, num_trash):
     qr = QuantumRegister(num_latent + 2 * num_trash + 1, "q")
     cr = ClassicalRegister(1, "c")
     circuit = QuantumCircuit(qr, cr)
-    circuit.compose(_ansatz(num_latent + num_trash), range(0, num_latent + num_trash), inplace=True)
+    circuit.compose(
+        _ansatz(num_latent + num_trash), range(0, num_latent + num_trash), inplace=True
+    )
     circuit.barrier()
     auxiliary_qubit = num_latent + 2 * num_trash
 
@@ -33,11 +38,12 @@ def _auto_encoder_circuit(num_latent, num_trash):
     circuit.measure(auxiliary_qubit, cr[0])
     return circuit
 
+
 class BasicQnnAutoencoder(TransformerMixin):
-    
+
     """Quantum denoising
 
-    This class implements a quantum auto encoder. 
+    This class implements a quantum auto encoder.
     The implementation was adapted from [1]_, to be compatible with scikit-learn.
 
     Parameters
@@ -76,15 +82,21 @@ class BasicQnnAutoencoder(TransformerMixin):
 
     """
 
-    def __init__(self, num_latent=3, num_trash=2, opt=SPSA(maxiter=100, blocking=True), callback=None):
+    def __init__(
+        self,
+        num_latent=3,
+        num_trash=2,
+        opt=SPSA(maxiter=100, blocking=True),
+        callback=None,
+    ):
         self.num_latent = num_latent
         self.num_trash = num_trash
         self.opt = opt
         self.callback = callback
-      
+
     def _log(self, msg):
-       logging.info(f"[BasicQnnAutoencoder] {msg}")
-    
+        logging.info(f"[BasicQnnAutoencoder] {msg}")
+
     def _get_transformer(self):
         # encoder
         transformer = QuantumCircuit(self.n_qubits)
@@ -95,7 +107,7 @@ class BasicQnnAutoencoder(TransformerMixin):
 
         # trash space
         for i in range(self.num_trash):
-          transformer.reset(self.num_latent + i)
+            transformer.reset(self.num_latent + i)
         transformer.barrier()
 
         # decoder
@@ -106,21 +118,21 @@ class BasicQnnAutoencoder(TransformerMixin):
     def _compute_fidelities(self, X):
         fidelities = []
         for trial in X:
-          param_values = np.concatenate((trial, self._opt_result.x))
-          output_qc = self._transformer.assign_parameters(param_values)
-          output_state = Statevector(output_qc).data
+            param_values = np.concatenate((trial, self._opt_result.x))
+            output_qc = self._transformer.assign_parameters(param_values)
+            output_state = Statevector(output_qc).data
 
-          original_qc = self._feature_map.assign_parameters(trial)
-          original_state = Statevector(original_qc).data
+            original_qc = self._feature_map.assign_parameters(trial)
+            original_state = Statevector(original_qc).data
 
-          fidelity = np.sqrt(np.dot(original_state.conj(), output_state) ** 2)
-          fidelities.append(fidelity.real)
+            fidelity = np.sqrt(np.dot(original_state.conj(), output_state) ** 2)
+            fidelities.append(fidelity.real)
         return fidelities
-    
+
     @property
     def n_qubits(self):
-       return self.num_latent + self.num_trash
-    
+        return self.num_latent + self.num_trash
+
     def fit(self, X, _y=None, **kwargs):
         """Fit the autoencoder.
 
@@ -128,7 +140,7 @@ class BasicQnnAutoencoder(TransformerMixin):
         ----------
         X : ndarray, shape (n_trials, n_feats)
             Set of time epochs.
-            n_feats must equal 2 ** n_qubits, 
+            n_feats must equal 2 ** n_qubits,
             where n_qubit = num_trash + num_latent.
 
         Returns
@@ -143,10 +155,12 @@ class BasicQnnAutoencoder(TransformerMixin):
         self.fidelities_ = []
         self._iter = 0
 
-        self._log(f'raw feature size: {2 ** self.n_qubits} and feature size: {n_features}')
-        assert 2 ** self.n_qubits == n_features
+        self._log(
+            f"raw feature size: {2 ** self.n_qubits} and feature size: {n_features}"
+        )
+        assert 2**self.n_qubits == n_features
 
-        self._feature_map = RawFeatureVector(2 ** self.n_qubits)
+        self._feature_map = RawFeatureVector(2**self.n_qubits)
 
         self._auto_encoder = _auto_encoder_circuit(self.num_latent, self.num_trash)
 
@@ -163,29 +177,28 @@ class BasicQnnAutoencoder(TransformerMixin):
         )
 
         def cost_func(params_values):
-          self._iter += 1
-          if self._iter % 10 == 0:
-            self._log(f"Iteration {self._iter}")
+            self._iter += 1
+            if self._iter % 10 == 0:
+                self._log(f"Iteration {self._iter}")
 
-          probabilities = qnn.forward(X, params_values)
-          cost = np.sum(probabilities[:, 1]) / X.shape[0]
-          self.costs_.append(cost)
-          if self.callback:
-             self.callback(self._iter, cost)
-          return cost
+            probabilities = qnn.forward(X, params_values)
+            cost = np.sum(probabilities[:, 1]) / X.shape[0]
+            self.costs_.append(cost)
+            if self.callback:
+                self.callback(self._iter, cost)
+            return cost
 
-        
-        initial_point = algorithm_globals.random.random(self._auto_encoder.num_parameters)
-        self._opt_result = self.opt.minimize(
-            fun=cost_func,
-            x0=initial_point)
+        initial_point = algorithm_globals.random.random(
+            self._auto_encoder.num_parameters
+        )
+        self._opt_result = self.opt.minimize(fun=cost_func, x0=initial_point)
 
         # encoder/decoder circuit
         self._transformer = self._get_transformer()
 
         # compute fidelity
         self.fidelities_ = self._compute_fidelities(X)
-        
+
         self._log(f"Mean fidelity: {np.mean(self.fidelities_)}")
 
         return self
@@ -197,7 +210,7 @@ class BasicQnnAutoencoder(TransformerMixin):
         ----------
         X : ndarray, shape (n_trials, n_feats)
             Set of time epochs.
-            n_feats must equal 2 ** n_qubits, 
+            n_feats must equal 2 ** n_qubits,
             where n_qubit = num_trash + num_latent.
 
         Returns
@@ -209,9 +222,9 @@ class BasicQnnAutoencoder(TransformerMixin):
         _, n_features = X.shape
         outputs = []
         for trial in X:
-          param_values = np.concatenate((trial, self._opt_result.x))
-          output_qc = self._transformer.assign_parameters(param_values)
-          output_sv = Statevector(output_qc).data
-          output_sv = np.reshape(np.abs(output_sv) ** 2, n_features)
-          outputs.append(output_sv)
+            param_values = np.concatenate((trial, self._opt_result.x))
+            output_qc = self._transformer.assign_parameters(param_values)
+            output_sv = Statevector(output_qc).data
+            output_sv = np.reshape(np.abs(output_sv) ** 2, n_features)
+            outputs.append(output_sv)
         return np.array(outputs)

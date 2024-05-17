@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from pyriemann.estimation import Covariances
 import numpy as np
 
+
 class NdRobustScaler(TransformerMixin):
     """Apply one robust scaler by feature.
 
@@ -74,7 +75,6 @@ class NdRobustScaler(TransformerMixin):
         return X
 
 
-
 class Vectorizer(BaseEstimator, TransformerMixin):
     """Vectorization.
 
@@ -128,6 +128,7 @@ class Vectorizer(BaseEstimator, TransformerMixin):
             The vectorized matrices.
         """
         return np.reshape(X, (X.shape[0], -1))
+
 
 class Devectorizer(TransformerMixin):
     """Transform vector to matrices
