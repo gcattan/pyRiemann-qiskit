@@ -73,10 +73,9 @@ for dataset in datasets:
 labels_dict = {"Target": 1, "NonTarget": 0}
 
 ##############################################################################
-# Define a callback to keep trace of the computed cost.
+# Define a callback to keep trace of the computed costs.
 
 costs = {}
-
 
 def fn_callback(iter, cost):
     if iter in costs:
@@ -93,12 +92,14 @@ def fn_callback(iter, cost):
 
 pipelines = {}
 
+# An important limitation is that:
+# n_components x n_times = 2 ** (num_latent + num_trash)
 n_components, n_times = 8, 64
 
-pipelines["LDA_denoised"] = make_pipeline(
+pipelines["QNN+LDA"] = make_pipeline(
     EpochChannelSelection(n_chan=n_components),
     Vectorizer(),
-    # Use COBYLA with only 1 iteration (this is for the example to plot in Ci/Cd)
+    # Use COBYLA with only 1 iteration (this is for runnin in Ci/Cd)
     BasicQnnAutoencoder(
         num_latent=n_components,
         num_trash=1,
@@ -124,7 +125,7 @@ pipelines["LDA"] = make_pipeline(
 # Run evaluation
 # ----------------
 #
-# Compare the pipeline using a cross sessions evaluation.
+# Compare the pipeline using a cross-sessions evaluation.
 
 evaluation = CrossSessionEvaluation(
     paradigm=paradigm, datasets=datasets, overwrite=True, n_jobs=-1

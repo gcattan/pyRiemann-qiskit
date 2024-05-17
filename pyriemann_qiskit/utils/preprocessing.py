@@ -1,8 +1,5 @@
-from sklearn.base import TransformerMixin
 from sklearn.preprocessing import RobustScaler
-from sklearn.decomposition import PCA
 from sklearn.base import BaseEstimator, TransformerMixin
-from pyriemann.estimation import Covariances
 import numpy as np
 
 
