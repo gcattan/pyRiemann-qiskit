@@ -116,7 +116,7 @@ class NaiveDimRed(TransformerMixin):
 
 
 
-class EpochSelectChannel(TransformerMixin):
+class EpochChannelSelection(TransformerMixin):
     """Select channel in epochs.
 
     Select channels based on covariance information, 
@@ -140,6 +140,12 @@ class EpochSelectChannel(TransformerMixin):
         self.n_chan = n_chan
         self.cov_est = cov_est
 
+    @staticmethod
+    def _get_indices(maxes, mean_cov):
+        indices = []
+        for v in maxes:
+            indices.extend(np.argwhere(mean_cov == v).flatten())
+        return np.unique(indices)
 
     def fit(self, X, _y=None, **kwargs):
         """Select channel based on covariances
@@ -153,30 +159,27 @@ class EpochSelectChannel(TransformerMixin):
 
         Returns
         -------
-        self : EpochSelectChannel instance
-            The EpochSelectChannel instance.
+        self : EpochChannelSelection instance
+            The EpochChannelSelection instance.
         """
 
         # Get the covariances of the channels for each epoch.
         covs = Covariances(estimator=self.cov_est).fit_transform(X)
         # Get the average covariance between the channels
-        m = np.mean(covs, axis=0)
-        n_feats, _ = m.shape
+        mean_cov = np.mean(covs, axis=0)
+        n_feats, _ = mean_cov.shape
         # Select the `n_chan` channels having the maximum covariances.
         all_max = []
         for i in range(n_feats):
             for j in range(i, n_feats):
-                if len(all_max) <= self.n_chan:
-                    all_max.append(m[i, j])
+                self._chs_idx = EpochChannelSelection._get_indices(all_max, mean_cov)
+
+                if len(self._chs_idx) < self.n_chan:
+                    all_max.append(mean_cov[i, j])
                 else:
-                    if m[i, j] > max(all_max):
-                        all_max[np.argmin(all_max)] = m[i, j]
-        indices = []
-        for v in all_max:
-            indices.extend(np.argwhere(m == v).flatten())
-        # We will keep only these channels for the transform step.
-        indices = np.unique(indices)
-        self._chs_idx = indices[:self.n_chan]
+                    if mean_cov[i, j] > max(all_max):
+                        all_max[np.argmin(all_max)] = mean_cov[i, j]
+
         return self
 
     def transform(self, X, **kwargs):

@@ -111,7 +111,11 @@ class BasicQnnAutoencoder(TransformerMixin):
           fidelity = np.sqrt(np.dot(original_state.conj(), output_state) ** 2)
           fidelities.append(fidelity.real)
         return fidelities
-      
+    
+    @property
+    def n_qubits(self):
+       return self.num_latent + self.num_trash
+    
     def fit(self, X, _y=None, **kwargs):
         """Fit the autoencoder.
 
@@ -134,16 +138,15 @@ class BasicQnnAutoencoder(TransformerMixin):
         self.fidelities_ = []
         self._iter = 0
 
-        n_qubits = self.num_latent + self.num_trash
-        self._log(f'raw feature size: {2 ** n_qubits} and feature size: {n_features}')
-        assert 2 ** n_qubits == n_features
+        self._log(f'raw feature size: {2 ** self.n_qubits} and feature size: {n_features}')
+        assert 2 ** self.n_qubits == n_features
 
-        self._feature_map = RawFeatureVector(2 ** n_qubits)
+        self._feature_map = RawFeatureVector(2 ** self.n_qubits)
 
         self._auto_encoder = _auto_encoder_circuit(self.num_latent, self.num_trash)
 
         qc = QuantumCircuit(self.num_latent + 2 * self.num_trash + 1, 1)
-        qc = qc.compose(self._feature_map, range(n_qubits))
+        qc = qc.compose(self._feature_map, range(self.n_qubits))
         qc = qc.compose(self._auto_encoder)
 
         qnn = SamplerQNN(
