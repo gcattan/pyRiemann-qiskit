@@ -10,6 +10,7 @@ from qiskit_algorithms.utils import algorithm_globals
 from sklearn.base import TransformerMixin
 import logging
 
+
 def _ansatz(num_qubits):
     return RealAmplitudes(num_qubits, reps=5)
 
