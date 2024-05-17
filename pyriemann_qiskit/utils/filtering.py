@@ -128,14 +128,17 @@ class EpochSelectChannel(TransformerMixin):
     ----------
     n_chan : int
         The number of channels to select.
+    cov_est : string (default: lwf)
+        The covariance estimator.
 
     Notes
     -----
     .. versionadded:: 0.3.0
     """
 
-    def __init__(self, n_chan):
+    def __init__(self, n_chan, cov_est="lwf"):
         self.n_chan = n_chan
+        self.cov_est = cov_est
 
 
     def fit(self, X, _y=None, **kwargs):
@@ -162,7 +165,7 @@ class EpochSelectChannel(TransformerMixin):
         # Select the `n_chan` channels having the maximum covariances.
         all_max = []
         for i in range(n_feats):
-            for j in range(n_feats):
+            for j in range(i, n_feats):
                 if len(all_max) <= self.n_chan:
                     all_max.append(m[i, j])
                 else:
@@ -173,7 +176,7 @@ class EpochSelectChannel(TransformerMixin):
             indices.extend(np.argwhere(m == v).flatten())
         # We will keep only these channels for the transform step.
         indices = np.unique(indices)
-        self._chs_idx = indices
+        self._chs_idx = indices[:self.n_chan]
         return self
 
     def transform(self, X, **kwargs):
