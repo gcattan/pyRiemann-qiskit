@@ -119,7 +119,7 @@ class EpochChannelSelection(TransformerMixin):
     """Select channel in epochs.
 
     Select channels based on covariance information,
-    keeping only channels with maximum covariancse.
+    keeping only channels with maximum covariances.
 
     Work on signal epochs.
 
@@ -164,7 +164,7 @@ class EpochChannelSelection(TransformerMixin):
 
         # Get the covariances of the channels for each epoch.
         covs = Covariances(estimator=self.cov_est).fit_transform(X)
-        # Get the average covariance between the channels
+        # Get the average covariance between the channels.
         mean_cov = np.mean(covs, axis=0)
         n_feats, _ = mean_cov.shape
         # Select the `n_chan` channels having the maximum covariances.
