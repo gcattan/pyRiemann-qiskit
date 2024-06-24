@@ -30,11 +30,7 @@ from pyriemann_qiskit.visualization.manifold import plot_manifold
 print(__doc__)
 
 ##############################################################################
-# getting rid of the warnings about the future
-warnings.simplefilter(action="ignore", category=FutureWarning)
-warnings.simplefilter(action="ignore", category=RuntimeWarning)
-
-warnings.filterwarnings("ignore")
+# Set log level
 
 set_log_level("info")
 
