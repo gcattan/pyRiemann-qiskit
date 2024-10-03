@@ -23,15 +23,21 @@ import warnings
 
 from matplotlib import pyplot as plt
 from moabb import set_log_level
-from moabb.datasets import bi2013a
-from moabb.evaluations import WithinSessionEvaluation
-from moabb.paradigms import P300
+from moabb.datasets import bi2013a, bi2012, Cattan2019_VR, Cattan2019_PHMD
+from moabb.datasets.compound_dataset import Cattan2019_VR_Il
+from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation, CrossSubjectEvaluation
+from moabb.paradigms import P300, RestingStateToP300Adapter
 from pyriemann.classification import MDM
-from pyriemann.estimation import XdawnCovariances
+from pyriemann.estimation import XdawnCovariances, Covariances
 import seaborn as sns
 from sklearn.pipeline import make_pipeline
-
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from qiskit_algorithms.optimizers import SPSA
+from pyriemann.estimation import XdawnCovariances
+from pyriemann.tangentspace import TangentSpace
 from pyriemann_qiskit.classification import QuanticNCH
+from pyriemann_qiskit.utils.hyper_params_factory import create_mixer_rotational_X_gates
+from pyriemann.spatialfilters import CSP
 
 print(__doc__)
 
@@ -56,28 +62,34 @@ set_log_level("info")
 # to 0 and 1
 labels_dict = {"Target": 1, "NonTarget": 0}
 
-paradigm = P300(resample=128)
+# paradigm = P300(resample=128)
+events = ["on", "off"]
+paradigm = RestingStateToP300Adapter(events=events)
 
-datasets = [bi2013a()]  # MOABB provides several other P300 datasets
-
+# datasets = [Cattan2019_VR(virtual_reality=True, screen_display=False)]  # MOABB provides several other P300 datasets
+datasets = [Cattan2019_PHMD()]
 # reduce the number of subjects, the Quantum pipeline takes a lot of time
 # if executed on the entire dataset
-n_subjects = 1
-for dataset in datasets:
-    dataset.subject_list = dataset.subject_list[0:n_subjects]
+# n_subjects = 5
+# for dataset in datasets:
+#     dataset.subject_list = dataset.subject_list[0:n_subjects]
 
 overwrite = True  # set to True if we want to overwrite cached results
 
 pipelines = {}
 
+# sf = XdawnCovariances(
+#         nfilter=3,
+#         classes=[labels_dict["Target"]],
+#         estimator="lwf",
+#         xdawn_estimator="scm",
+#     ),
+sf = make_pipeline(
+    Covariances(estimator="scm"),
+    CSP(nfilter=6, log=False)
+)
 pipelines["NCH+RANDOM_HULL"] = make_pipeline(
-    # applies XDawn and calculates the covariance matrix, output it matrices
-    XdawnCovariances(
-        nfilter=3,
-        classes=[labels_dict["Target"]],
-        estimator="lwf",
-        xdawn_estimator="scm",
-    ),
+    sf,
     QuanticNCH(
         n_hulls_per_class=1,
         n_samples_per_hull=3,
@@ -89,12 +101,7 @@ pipelines["NCH+RANDOM_HULL"] = make_pipeline(
 
 pipelines["NCH+MIN_HULL"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
-    XdawnCovariances(
-        nfilter=3,
-        classes=[labels_dict["Target"]],
-        estimator="lwf",
-        xdawn_estimator="scm",
-    ),
+    sf,
     QuanticNCH(
         n_hulls_per_class=1,
         n_samples_per_hull=3,
@@ -106,13 +113,70 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
 
 # this is a non quantum pipeline
 pipelines["XD+MDM"] = make_pipeline(
-    XdawnCovariances(
-        nfilter=3,
-        classes=[labels_dict["Target"]],
-        estimator="lwf",
-        xdawn_estimator="scm",
-    ),
+    sf,
     MDM(),
+)
+
+pipelines["Ts+LDA"] = make_pipeline(
+      sf,
+      TangentSpace(metric="riemann"),
+      LDA(),
+  )
+
+pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
+    # applies XDawn and calculates the covariance matrix, output it matrices
+    sf,
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        subsampling="random",
+        quantum=True,
+        # Provide create_mixer to force QAOA-CV optimization
+        create_mixer=create_mixer_rotational_X_gates(0),
+        shots=100,
+        qaoa_optimizer=SPSA(maxiter=100),
+        n_reps=2
+    ),
+)
+
+pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
+    # applies XDawn and calculates the covariance matrix, output it matrices
+    sf,
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        subsampling="random",
+        quantum=True,
+    ),
+)
+
+pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
+    sf,
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        subsampling="min",
+        quantum=True,
+        # Provide create_mixer to force QAOA-CV optimization
+        create_mixer=create_mixer_rotational_X_gates(0),
+        shots=100,
+        qaoa_optimizer=SPSA(maxiter=100),
+        n_reps=2
+    ),
+)
+
+pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
+    sf,
+    QuanticNCH(
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
+        n_jobs=12,
+        subsampling="min",
+        quantum=True,
+    ),
 )
 
 print("Total pipelines to evaluate: ", len(pipelines))
@@ -148,5 +212,5 @@ sns.pointplot(data=results, y="score", x="pipeline", ax=ax, palette="Set1")
 
 ax.set_ylabel("ROC AUC")
 ax.set_ylim(0.3, 1)
-
+plt.xticks(rotation=45)
 plt.show()
