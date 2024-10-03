@@ -28,15 +28,16 @@ from moabb.datasets.compound_dataset import Cattan2019_VR_Il
 from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation, CrossSubjectEvaluation
 from moabb.paradigms import P300, RestingStateToP300Adapter
 from pyriemann.classification import MDM
-from pyriemann.estimation import XdawnCovariances, Covariances
+from pyriemann.estimation import XdawnCovariances, Covariances, Shrinkage
 import seaborn as sns
 from sklearn.pipeline import make_pipeline
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from qiskit_algorithms.optimizers import SPSA
+from pyriemann_qiskit.pipelines import QuantumMDMWithRiemannianPipeline
+from qiskit_algorithms.optimizers import SPSA, COBYLA, SLSQP
 from pyriemann.estimation import XdawnCovariances
 from pyriemann.tangentspace import TangentSpace
 from pyriemann_qiskit.classification import QuanticNCH
-from pyriemann_qiskit.utils.hyper_params_factory import create_mixer_rotational_X_gates
+from pyriemann_qiskit.utils.hyper_params_factory import create_mixer_rotational_X_gates, create_mixer_rotational_XY_gates
 from pyriemann.spatialfilters import CSP
 
 print(__doc__)
@@ -85,14 +86,14 @@ pipelines = {}
 #         xdawn_estimator="scm",
 #     ),
 sf = make_pipeline(
-    Covariances(estimator="scm"),
-    CSP(nfilter=6, log=False)
+    Covariances(estimator="lwf"),
+    CSP(nfilter=3, log=False)
 )
 pipelines["NCH+RANDOM_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="random",
         quantum=False,
@@ -103,8 +104,8 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="min",
         quantum=False,
@@ -127,8 +128,8 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="random",
         quantum=True,
@@ -144,8 +145,8 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="random",
         quantum=True,
@@ -155,8 +156,8 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
 pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="min",
         quantum=True,
@@ -171,18 +172,28 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
 pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
-        n_hulls_per_class=1,
-        n_samples_per_hull=3,
+        n_hulls_per_class=5,
+        n_samples_per_hull=5,
         n_jobs=12,
         subsampling="min",
         quantum=True,
     ),
 )
 
+# pipelines["QMDM_mean"] = QuantumMDMWithRiemannianPipeline(
+#     metric={"mean": "qeuclid", "distance": "euclid"},
+#     quantum=True,
+#     regularization=Shrinkage(shrinkage=0.9),
+#     shots=1024,
+#     seed=696288,
+# )
+
+
 print("Total pipelines to evaluate: ", len(pipelines))
 
-evaluation = WithinSessionEvaluation(
-    paradigm=paradigm, datasets=datasets, suffix="examples", overwrite=overwrite
+evaluation = CrossSubjectEvaluation(
+    paradigm=paradigm, datasets=datasets, suffix="examples", overwrite=overwrite,
+    n_splits=3
 )
 
 results = evaluation.process(pipelines)
