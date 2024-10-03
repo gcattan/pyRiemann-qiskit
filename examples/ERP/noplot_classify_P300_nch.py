@@ -92,6 +92,7 @@ sf = make_pipeline(
 pipelines["NCH+RANDOM_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
+        seed=884451,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
@@ -104,6 +105,7 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
+        seed=475751,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
@@ -128,6 +130,7 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
+        seed=884451,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
@@ -145,6 +148,7 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
+        seed=884451,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
@@ -156,6 +160,7 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
 pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
+        seed=475751,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
@@ -172,6 +177,7 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
 pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
+        seed=475751,
         n_hulls_per_class=3,
         n_samples_per_hull=5,
         n_jobs=12,
