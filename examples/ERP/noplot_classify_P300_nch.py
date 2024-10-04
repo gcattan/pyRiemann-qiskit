@@ -85,6 +85,10 @@ pipelines = {}
 #         estimator="lwf",
 #         xdawn_estimator="scm",
 #     ),
+seed = 884451
+# seed = 475751
+# seed = None
+
 sf = make_pipeline(
     Covariances(estimator="lwf"),
     CSP(nfilter=3, log=False)
@@ -92,9 +96,9 @@ sf = make_pipeline(
 pipelines["NCH+RANDOM_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
-        seed=884451,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
         quantum=False,
@@ -105,9 +109,9 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        seed=475751,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
         quantum=False,
@@ -130,9 +134,9 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        seed=884451,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
         quantum=True,
@@ -148,9 +152,9 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
     # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
-        seed=884451,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
         quantum=True,
@@ -160,9 +164,9 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
 pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
-        seed=475751,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
         quantum=True,
@@ -177,9 +181,9 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
 pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
-        seed=475751,
-        n_hulls_per_class=3,
-        n_samples_per_hull=5,
+        seed=seed,
+        n_hulls_per_class=1,
+        n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
         quantum=True,
