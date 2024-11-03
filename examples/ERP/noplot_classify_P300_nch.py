@@ -28,7 +28,7 @@ from moabb.datasets.compound_dataset import Cattan2019_VR_Il
 from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation, CrossSubjectEvaluation
 from moabb.paradigms import P300, RestingStateToP300Adapter
 from pyriemann.classification import MDM
-from pyriemann.estimation import XdawnCovariances, Covariances, Shrinkage
+from pyriemann.estimation import XdawnCovariances, Covariances, Shrinkage, ERPCovariances
 import seaborn as sns
 from sklearn.pipeline import make_pipeline
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
@@ -85,9 +85,10 @@ pipelines = {}
 #         estimator="lwf",
 #         xdawn_estimator="scm",
 #     ),
-seed = 884451
-# seed = 475751
-# seed = None
+# seed = 884451
+seed = 475751
+#seed = None
+#seed = 42
 
 sf = make_pipeline(
     Covariances(estimator="lwf"),
@@ -97,7 +98,7 @@ pipelines["NCH+RANDOM_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
+        n_hulls_per_class=3,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
@@ -110,7 +111,6 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
@@ -119,7 +119,7 @@ pipelines["NCH+MIN_HULL"] = make_pipeline(
 )
 
 # this is a non quantum pipeline
-pipelines["XD+MDM"] = make_pipeline(
+pipelines["MDM"] = make_pipeline(
     sf,
     MDM(),
 )
@@ -135,7 +135,7 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
+        n_hulls_per_class=3,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
@@ -153,7 +153,7 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
+        n_hulls_per_class=3,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="random",
@@ -165,7 +165,6 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
@@ -182,13 +181,15 @@ pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=1,
         n_samples_per_hull=3,
         n_jobs=12,
         subsampling="min",
         quantum=True,
     ),
 )
+
+import random
+random.seed(seed)
 
 # pipelines["QMDM_mean"] = QuantumMDMWithRiemannianPipeline(
 #     metric={"mean": "qeuclid", "distance": "euclid"},
