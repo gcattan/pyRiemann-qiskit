@@ -85,10 +85,10 @@ pipelines = {}
 #         estimator="lwf",
 #         xdawn_estimator="scm",
 #     ),
-# seed = 884451
-seed = 475751
+seed = 884451
+# seed = 475751
 #seed = None
-#seed = 42
+# seed = 0
 
 sf = make_pipeline(
     Covariances(estimator="lwf"),
@@ -204,7 +204,8 @@ print("Total pipelines to evaluate: ", len(pipelines))
 
 evaluation = CrossSubjectEvaluation(
     paradigm=paradigm, datasets=datasets, suffix="examples", overwrite=overwrite,
-    n_splits=3
+    n_splits=3,
+    random_state=seed
 )
 
 results = evaluation.process(pipelines)
