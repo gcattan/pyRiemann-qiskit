@@ -15,7 +15,7 @@ of qubits supported by the real quantum computer you are going to use.
 A list of real quantum  computers is available in your IBM quantum account.
 
 """
-# Author: Anton Andreev
+# Author: Anton Andreev/Gregoire Cattan
 # Modified from plot_classify_EEG_tangentspace.py of pyRiemann
 # License: BSD (3-clause)
 
@@ -63,43 +63,36 @@ set_log_level("info")
 # to 0 and 1
 labels_dict = {"Target": 1, "NonTarget": 0}
 
-# paradigm = P300(resample=128)
 events = ["on", "off"]
 paradigm = RestingStateToP300Adapter(events=events)
 
-# datasets = [Cattan2019_VR(virtual_reality=True, screen_display=False)]  # MOABB provides several other P300 datasets
 datasets = [Cattan2019_PHMD()]
-# reduce the number of subjects, the Quantum pipeline takes a lot of time
-# if executed on the entire dataset
-# n_subjects = 5
-# for dataset in datasets:
-#     dataset.subject_list = dataset.subject_list[0:n_subjects]
 
 overwrite = True  # set to True if we want to overwrite cached results
 
 pipelines = {}
 
-# sf = XdawnCovariances(
-#         nfilter=3,
-#         classes=[labels_dict["Target"]],
-#         estimator="lwf",
-#         xdawn_estimator="scm",
-#     ),
-seed = 884451
-# seed = 475751
+# seed = 884451
+seed = 475751
 #seed = None
 # seed = 0
 
+n_hulls_per_class = 3
+n_samples_per_hull = 7
+
+import random
+random.seed(seed)
+
 sf = make_pipeline(
     Covariances(estimator="lwf"),
-    CSP(nfilter=3, log=False)
 )
+
 pipelines["NCH+RANDOM_HULL"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=3,
-        n_samples_per_hull=3,
+        n_hulls_per_class=n_hulls_per_class,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="random",
         quantum=False,
@@ -107,11 +100,10 @@ pipelines["NCH+RANDOM_HULL"] = make_pipeline(
 )
 
 pipelines["NCH+MIN_HULL"] = make_pipeline(
-    # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
         seed=seed,
-        n_samples_per_hull=3,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="min",
         quantum=False,
@@ -131,16 +123,14 @@ pipelines["Ts+LDA"] = make_pipeline(
   )
 
 pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
-    # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=3,
-        n_samples_per_hull=3,
+        n_hulls_per_class=n_hulls_per_class,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="random",
         quantum=True,
-        # Provide create_mixer to force QAOA-CV optimization
         create_mixer=create_mixer_rotational_X_gates(0),
         shots=100,
         qaoa_optimizer=SPSA(maxiter=100),
@@ -149,12 +139,11 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
 )
 
 pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
-    # applies XDawn and calculates the covariance matrix, output it matrices
     sf,
     QuanticNCH(
         seed=seed,
-        n_hulls_per_class=3,
-        n_samples_per_hull=3,
+        n_hulls_per_class=n_hulls_per_class,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="random",
         quantum=True,
@@ -165,11 +154,10 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_samples_per_hull=3,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="min",
         quantum=True,
-        # Provide create_mixer to force QAOA-CV optimization
         create_mixer=create_mixer_rotational_X_gates(0),
         shots=100,
         qaoa_optimizer=SPSA(maxiter=100),
@@ -181,23 +169,12 @@ pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
-        n_samples_per_hull=3,
+        n_samples_per_hull=n_samples_per_hull,
         n_jobs=12,
         subsampling="min",
         quantum=True,
     ),
 )
-
-import random
-random.seed(seed)
-
-# pipelines["QMDM_mean"] = QuantumMDMWithRiemannianPipeline(
-#     metric={"mean": "qeuclid", "distance": "euclid"},
-#     quantum=True,
-#     regularization=Shrinkage(shrinkage=0.9),
-#     shots=1024,
-#     seed=696288,
-# )
 
 
 print("Total pipelines to evaluate: ", len(pipelines))
@@ -205,7 +182,7 @@ print("Total pipelines to evaluate: ", len(pipelines))
 evaluation = CrossSubjectEvaluation(
     paradigm=paradigm, datasets=datasets, suffix="examples", overwrite=overwrite,
     n_splits=3,
-    random_state=seed
+    random_state=seed,
 )
 
 results = evaluation.process(pipelines)
@@ -234,6 +211,6 @@ sns.stripplot(
 sns.pointplot(data=results, y="score", x="pipeline", ax=ax, palette="Set1")
 
 ax.set_ylabel("ROC AUC")
-ax.set_ylim(0.3, 1)
+ax.set_ylim(0.35, 0.75)
 plt.xticks(rotation=45)
 plt.show()
