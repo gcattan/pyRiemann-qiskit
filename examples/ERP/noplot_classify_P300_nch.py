@@ -20,6 +20,7 @@ A list of real quantum  computers is available in your IBM quantum account.
 # License: BSD (3-clause)
 
 import warnings
+import numpy as np
 
 from matplotlib import pyplot as plt
 from moabb import set_log_level
@@ -78,10 +79,11 @@ seed = 475751
 # seed = 0
 
 n_hulls_per_class = 3
-n_samples_per_hull = 7
+n_samples_per_hull = 6
 
 import random
 random.seed(seed)
+np.random.seed(seed)
 
 sf = make_pipeline(
     Covariances(estimator="lwf"),
@@ -116,7 +118,7 @@ pipelines["MDM"] = make_pipeline(
     MDM(),
 )
 
-pipelines["Ts+LDA"] = make_pipeline(
+pipelines["TS+LDA"] = make_pipeline(
       sf,
       TangentSpace(metric="riemann"),
       LDA(),
@@ -198,6 +200,17 @@ print(results.groupby("pipeline").mean("score")[["score", "time"]])
 
 fig, ax = plt.subplots(facecolor="white", figsize=[8, 4])
 
+order = [
+    'NCH+RANDOM_HULL',
+    'NCH+RANDOM_HULL_NAIVEQAOA',
+    'NCH+RANDOM_HULL_QAOACV',
+    'NCH+MIN_HULL',
+    'NCH+MIN_HULL_NAIVEQAOA',
+    'NCH+MIN_HULL_QAOACV',
+    'TS+LDA',
+    'MDM'
+]
+
 sns.stripplot(
     data=results,
     y="score",
@@ -207,10 +220,11 @@ sns.stripplot(
     alpha=0.5,
     zorder=1,
     palette="Set1",
+    order=order
 )
 sns.pointplot(data=results, y="score", x="pipeline", ax=ax, palette="Set1")
 
 ax.set_ylabel("ROC AUC")
-ax.set_ylim(0.35, 0.75)
+ax.set_ylim(0.3, 0.75)
 plt.xticks(rotation=45)
 plt.show()
