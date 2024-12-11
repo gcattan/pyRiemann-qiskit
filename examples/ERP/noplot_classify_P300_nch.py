@@ -82,8 +82,10 @@ n_hulls_per_class = 3
 n_samples_per_hull = 6
 
 import random
+import qiskit_algorithms
 random.seed(seed)
 np.random.seed(seed)
+qiskit_algorithms.utils.algorithm_globals.random_seed
 
 sf = make_pipeline(
     Covariances(estimator="lwf"),
@@ -135,7 +137,7 @@ pipelines["NCH+RANDOM_HULL_QAOACV"] = make_pipeline(
         quantum=True,
         create_mixer=create_mixer_rotational_X_gates(0),
         shots=100,
-        qaoa_optimizer=SPSA(maxiter=100),
+        qaoa_optimizer=SPSA(maxiter=100, blocking=False),
         n_reps=2
     ),
 )
@@ -152,7 +154,7 @@ pipelines["NCH+RANDOM_HULL_NAIVEQAOA"] = make_pipeline(
     ),
 )
 
-pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
+pipelines["NCH+MIN_HULL_QAOACV"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
@@ -162,12 +164,12 @@ pipelines["NCH_MIN_HULL_QAOACV"] = make_pipeline(
         quantum=True,
         create_mixer=create_mixer_rotational_X_gates(0),
         shots=100,
-        qaoa_optimizer=SPSA(maxiter=100),
+        qaoa_optimizer=SPSA(maxiter=100, blocking=False),
         n_reps=2
     ),
 )
 
-pipelines["NCH_MIN_HULL_NAIVEQAOA"] = make_pipeline(
+pipelines["NCH+MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
         seed=seed,
@@ -220,9 +222,18 @@ sns.stripplot(
     alpha=0.5,
     zorder=1,
     palette="Set1",
-    order=order
+    order=order,
+    hue_order=order,
 )
-sns.pointplot(data=results, y="score", x="pipeline", ax=ax, palette="Set1")
+sns.pointplot(
+    data=results,
+    y="score",
+    x="pipeline",
+    ax=ax,
+    palette="Set1",
+    order=order,
+    hue_order=order,
+)
 
 ax.set_ylabel("ROC AUC")
 ax.set_ylim(0.3, 0.75)
