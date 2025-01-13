@@ -49,7 +49,7 @@ set_log_level("info")
 pipelines = {}
 
 pipelines["RG_QSVM"] = QuantumClassifierWithDefaultRiemannianPipeline(
-    shots=100,
+    shots=1024,
     nfilter=2,
     dim_red=PCA(n_components=5),
     params={"seed": 42, "use_fidelity_state_vector_kernel": True},
