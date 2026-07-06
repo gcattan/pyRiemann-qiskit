@@ -1,0 +1,35 @@
+doc/api.rst
+  s_41468fb62304a5::t_12abd414e7c7d7 122-132
+examples/toys_dataset/noplot_qioce_optimizer_ablation.py
+  s_d6d1cff4bdd6ee::t_d93a07e15b88aa 6,15,45-47,78-80,92,143-151
+pyriemann_qiskit/optimization/__init__.py
+  s_d6d1cff4bdd6ee::t_bb067575ddadbf 1,8
+pyriemann_qiskit/optimization/riemannian_adam.py
+  s_d6d1cff4bdd6ee::t_a3bf141b62b579 1-246
+tests/test_riemannian_adam.py
+  s_d6d1cff4bdd6ee::t_8b8a51af090d86 1-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a7b6b40da2e22d02abbccfe5ca1390e9ae00b0fc",
+  "prompts": {},
+  "sessions": {
+    "s_41468fb62304a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b62725ef-f309-4ee6-b06d-5b879d20777e",
+        "model": "unknown"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    },
+    "s_d6d1cff4bdd6ee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d80275e9-4b03-4629-8c77-f144ef82b446",
+        "model": "unknown"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
