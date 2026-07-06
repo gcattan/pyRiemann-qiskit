@@ -1,0 +1,26 @@
+doc/whatsnew.rst
+  s_d6d1cff4bdd6ee::t_6fd60a199c49d2 9-15
+pyriemann_qiskit/optimization/riemannian_adam.py
+  s_d6d1cff4bdd6ee::t_8977c328f4cabb 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0d087e18082c3392c2fc53cfc7d3e2590b16c4a0",
+  "prompts": {},
+  "humans": {
+    "h_57d8170b41e3bb": {
+      "author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  },
+  "sessions": {
+    "s_d6d1cff4bdd6ee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d80275e9-4b03-4629-8c77-f144ef82b446",
+        "model": "unknown"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
