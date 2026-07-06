@@ -1,0 +1,19 @@
+benchmarks/light_benchmark.py
+  s_0c5ed98e704039::t_d114ed146aa725 42-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3b58c19f82968ec99b9aeb9b942204655504c987",
+  "prompts": {},
+  "sessions": {
+    "s_0c5ed98e704039": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d2565df7-a6c0-4624-84d5-5cd047bd1848",
+        "model": "unknown"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
