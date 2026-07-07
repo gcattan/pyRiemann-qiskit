@@ -1,0 +1,24 @@
+doc/api.rst
+  s_d6d1cff4bdd6ee::t_c79973514f5f88 111,113-114,120-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "54d43ba0cdaab94d35c5f93eae6e03be733087e1",
+  "prompts": {},
+  "humans": {
+    "h_57d8170b41e3bb": {
+      "author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  },
+  "sessions": {
+    "s_d6d1cff4bdd6ee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d80275e9-4b03-4629-8c77-f144ef82b446",
+        "model": "unknown"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
