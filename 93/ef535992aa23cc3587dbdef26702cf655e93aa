@@ -1,0 +1,23 @@
+setup.py
+  s_a0c551e613adcd::t_afee4b8f0d227d 44
+requirements.txt
+  s_a0c551e613adcd::t_96a5e98e1454bc 9
+doc/requirements.txt
+  s_a0c551e613adcd::t_89f6946427f254 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "93ef535992aa23cc3587dbdef26702cf655e93aa",
+  "prompts": {},
+  "sessions": {
+    "s_a0c551e613adcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03dfd8f7-5632-4f27-bac8-56fbf4b0d8cc",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
