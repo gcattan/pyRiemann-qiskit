@@ -1,0 +1,40 @@
+pyriemann_qiskit/pipelines.py
+  s_a0c551e613adcd::t_309d32b34f9161 385
+  s_a0c551e613adcd::t_d8de64c83d1ab8 336-337,360-363,372
+pyriemann_qiskit/optimization/docplex.py
+  s_a0c551e613adcd::t_db93b7f4e63b26 206-209,215-218
+  s_a0c551e613adcd::t_6afab18599988e 467,469-472,474
+  s_a0c551e613adcd::t_cf5e6b0b358570 27-30,32
+  s_a0c551e613adcd::t_6f7a30d9a5c05a 1088
+  s_a0c551e613adcd::t_ce6c264e2234ea 395-396,404-410,419,423
+  s_a0c551e613adcd::t_97600607aa23d4 166-205,210-214,219-257
+  s_a0c551e613adcd::t_d62175de853d6a 468,473,475-480
+  s_a0c551e613adcd::t_752a8afa1095e8 665-672
+pyriemann_qiskit/classification/wrappers/quantic_nch.py
+  s_a0c551e613adcd::t_94d11ee05bf5b8 119
+  s_a0c551e613adcd::t_beff3383c49ccd 56-57
+  s_a0c551e613adcd::t_e903057a770749 90
+  s_a0c551e613adcd::t_653cd0035ce3ae 28-31
+pyriemann_qiskit/classification/wrappers/quantic_mdm.py
+  s_a0c551e613adcd::t_9d9768a376a9e4 3
+  s_a0c551e613adcd::t_a88d94ef878d4c 39-42
+  s_a0c551e613adcd::t_8a0d0854175aeb 142
+  s_a0c551e613adcd::t_b7a38d9308ae91 74-75
+  s_a0c551e613adcd::t_dcafd916df3dad 113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "8f51a0f7cc359199cd75bb59637633cccb5ff49b",
+  "prompts": {},
+  "sessions": {
+    "s_a0c551e613adcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03dfd8f7-5632-4f27-bac8-56fbf4b0d8cc",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
