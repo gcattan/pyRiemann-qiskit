@@ -1,0 +1,21 @@
+pyriemann_qiskit/optimization/mean.py
+  s_a0c551e613adcd::t_036b4471425b08 74
+tests/test_utils_mean.py
+  s_a0c551e613adcd::t_17ab9f092e4656 60,78,96,114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "9c406c1fddb169fbb0476bdf7898d9b8290fff6d",
+  "prompts": {},
+  "sessions": {
+    "s_a0c551e613adcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03dfd8f7-5632-4f27-bac8-56fbf4b0d8cc",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
