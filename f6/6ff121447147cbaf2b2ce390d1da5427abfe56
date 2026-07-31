@@ -1,0 +1,20 @@
+doc/whatsnew.rst
+  s_a0c551e613adcd::t_cb35afa46ba8c7 18-32
+  s_a0c551e613adcd::t_02822444c4c714 16-17,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "f66ff121447147cbaf2b2ce390d1da5427abfe56",
+  "prompts": {},
+  "sessions": {
+    "s_a0c551e613adcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03dfd8f7-5632-4f27-bac8-56fbf4b0d8cc",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
