@@ -1,0 +1,28 @@
+CITATION.cff
+  s_72e791a9b99e3b::t_db9d1dcb37d507 17-18,23-39,41-48
+  s_72e791a9b99e3b::t_3c6a317500c081 1
+  s_72e791a9b99e3b::t_2f2fe6ab9af6c6 6-7
+  h_57d8170b41e3bb 2-5,8-15,40,49-84
+  s_72e791a9b99e3b::t_48b8a6367f2e55 16,19-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "6ee6c041930e261bde77bebef299989dd5834811",
+  "prompts": {},
+  "humans": {
+    "h_57d8170b41e3bb": {
+      "author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  },
+  "sessions": {
+    "s_72e791a9b99e3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7796382f-4587-4ac0-8e41-0932a340d562",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
