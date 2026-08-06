@@ -1,0 +1,20 @@
+regenerate_symb_cache.py
+  s_ec2193a9e4bfc0::t_c9f346622618a6 3-14,29-50,57,65
+  s_ec2193a9e4bfc0::t_dfd0565798db8f 53-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "989146daab287ad96bd7cd5e8370c816f6ad5f53",
+  "prompts": {},
+  "sessions": {
+    "s_ec2193a9e4bfc0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "12f299f1-cd14-4aaf-b1f3-2e0e1ed3164d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
