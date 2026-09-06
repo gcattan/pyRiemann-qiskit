@@ -1,0 +1,47 @@
+pyriemann_qiskit/classification/wrappers/quantic_mdm.py
+  s_a0fbfa1da3d205::t_7b412dcbd83890 95-112
+  s_a0fbfa1da3d205::t_eb5267c259c7e8 44
+  s_a0fbfa1da3d205::t_340799e12b30cb 152-153,173-174,190-191
+pyriemann_qiskit/optimization/__init__.py
+  s_a0fbfa1da3d205::t_f3972cb0f987aa 7,17
+pyriemann_qiskit/optimization/pkit_optimizer.py
+  s_a0fbfa1da3d205::t_ea4bd142901ba6 197-198
+  s_a0fbfa1da3d205::t_345a9b698571d1 1-23,25-26,28-35,60-69,83-121,126-127,129,131-190,194-196,199-201,203-230,238-248,253-254,256,258-273,275-311,313,315-316,319-333
+  s_a0fbfa1da3d205::t_0c9762a53e0064 122-125,128,130
+  s_a0fbfa1da3d205::t_06b77502c851dd 24,27,36-59
+  s_a0fbfa1da3d205::t_64e7a12eebedac 249-252,255,257
+  s_a0fbfa1da3d205::t_0da637057f044e 312,314
+  s_a0fbfa1da3d205::t_23ffb5dc38c444 231-237
+  s_a0fbfa1da3d205::t_3ec3c9c28d78cf 191-193
+  s_a0fbfa1da3d205::t_e28fdb3ecca49f 274
+  s_a0fbfa1da3d205::t_823b21f11f81a7 202
+  s_a0fbfa1da3d205::t_3776a6e84f38a5 70-82
+  s_a0fbfa1da3d205::t_feaca01c48d384 317-318
+pyriemann_qiskit/utils/utils.py
+  s_a0fbfa1da3d205::t_3a42903f71cbad 8
+  s_a0fbfa1da3d205::t_823b21f11f81a7 143
+  s_a0fbfa1da3d205::t_f62601c42c8ea5 50-51,57-58,65-66,68-69,87-100,105,111-120,125-126,129-142,144
+pyriemann_qiskit/classification/wrappers/quantic_nch.py
+  s_a0fbfa1da3d205::t_e1f761813af17d 131-132,153-154,170-171
+  s_a0fbfa1da3d205::t_20007c8bd75c7c 32
+  s_a0fbfa1da3d205::t_e12bb26b3fc8da 87-104
+tests/test_pkit_optimizer.py
+  s_a0fbfa1da3d205::t_e37e3326c0f323 1-6,12-17,21
+  s_a0fbfa1da3d205::t_337441a8329cff 7-11,18-20,22-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "32dcd600485c18491c2262c82e4f28003b00d370",
+  "prompts": {},
+  "sessions": {
+    "s_a0fbfa1da3d205": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "211c07d3-b08a-4232-98b6-96e0f7af2918",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
