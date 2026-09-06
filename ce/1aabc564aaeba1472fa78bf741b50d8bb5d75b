@@ -1,0 +1,26 @@
+examples/toys_dataset/noplot_pkit_qaoa_ablation.py
+  s_a0fbfa1da3d205::t_4b6c8dbd6e1f4e 211-214,217,220
+  s_a0fbfa1da3d205::t_b6af64c8887858 262
+  s_a0fbfa1da3d205::t_552a0cdf9142ab 164-173
+  s_a0fbfa1da3d205::t_dd1a7a2b8629d5 183-186
+  s_a0fbfa1da3d205::t_34056488bb549c 74
+  s_a0fbfa1da3d205::t_cbc685e9e40b74 128
+  s_a0fbfa1da3d205::t_c458344595adc4 231
+  s_a0fbfa1da3d205::t_89b382f5ed922d 1-73,75-127,129-163,174-182,187-210,215-216,218-219,221-230,232-261,263-266
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ce1aabc564aaeba1472fa78bf741b50d8bb5d75b",
+  "prompts": {},
+  "sessions": {
+    "s_a0fbfa1da3d205": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "211c07d3-b08a-4232-98b6-96e0f7af2918",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
