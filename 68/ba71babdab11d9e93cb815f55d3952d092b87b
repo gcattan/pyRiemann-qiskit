@@ -1,0 +1,19 @@
+tests/test_datasets.py
+  s_fb3824a6b9ceb5::t_9625388d78cc12 1,3,5-8,27-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "68ba71babdab11d9e93cb815f55d3952d092b87b",
+  "prompts": {},
+  "sessions": {
+    "s_fb3824a6b9ceb5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "10920017-e9e9-47fc-aacf-e73bdd2a3f05",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
