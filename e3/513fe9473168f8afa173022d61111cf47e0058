@@ -1,0 +1,25 @@
+examples/toys_dataset/noplot_pkit_qaoa_ablation.py
+  s_f9707800f3eaa6::t_008436a74fe236 2,4,14-15,17-20,28
+  h_57d8170b41e3bb 26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e3513fe9473168f8afa173022d61111cf47e0058",
+  "prompts": {},
+  "humans": {
+    "h_57d8170b41e3bb": {
+      "author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  },
+  "sessions": {
+    "s_f9707800f3eaa6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5d609fda-00d1-4521-b29e-985149c8e4ee",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
