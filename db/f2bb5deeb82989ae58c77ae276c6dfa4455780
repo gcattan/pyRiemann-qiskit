@@ -1,0 +1,25 @@
+doc/whatsnew.rst
+  h_57d8170b41e3bb 12-13
+  s_9633c1894fdc91::t_a9b7edc169589b 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "dbf2bb5deeb82989ae58c77ae276c6dfa4455780",
+  "prompts": {},
+  "humans": {
+    "h_57d8170b41e3bb": {
+      "author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  },
+  "sessions": {
+    "s_9633c1894fdc91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70e200cf-17e5-4a72-9410-e9363415d0dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
