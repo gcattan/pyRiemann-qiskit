@@ -1,0 +1,20 @@
+doc/api.rst
+  s_9633c1894fdc91::t_1edb982ac334c8 105-107,114-123
+  s_9633c1894fdc91::t_54e3fa1327bd71 124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ba73976edc3378c5fd59008549e5a671210bd646",
+  "prompts": {},
+  "sessions": {
+    "s_9633c1894fdc91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70e200cf-17e5-4a72-9410-e9363415d0dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
