@@ -1,0 +1,34 @@
+pyriemann_qiskit/optimization/docplex.py
+  s_9633c1894fdc91::t_8e12b5fa63e762 898
+  s_9633c1894fdc91::t_d7f379f60c2e2a 247-328
+  s_9633c1894fdc91::t_d595467369e1c4 830
+  s_9633c1894fdc91::t_616395a585c2e6 1172
+  s_9633c1894fdc91::t_b357c0314e428d 923
+  s_9633c1894fdc91::t_d7f6970678f3c5 1343
+pyriemann_qiskit/optimization/pkit_optimizer.py
+  s_9633c1894fdc91::t_59080459bb177c 389,395
+  s_9633c1894fdc91::t_ea0c19f1c9c315 254-259,262,271
+  s_9633c1894fdc91::t_b8ab48c48e4863 371
+  s_9633c1894fdc91::t_8243000bb22854 20-25
+  s_9633c1894fdc91::t_55c45af2271b2e 269,414
+  s_9633c1894fdc91::t_6e329e6c5dfdf3 405
+  s_9633c1894fdc91::t_b998968833ddd4 102-169
+  s_9633c1894fdc91::t_1304392a80b46e 214
+  s_9633c1894fdc91::t_a124ee3698d6ee 228,231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e23d6f775bb990ccbc78299870de1b1162924078",
+  "prompts": {},
+  "sessions": {
+    "s_9633c1894fdc91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70e200cf-17e5-4a72-9410-e9363415d0dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
