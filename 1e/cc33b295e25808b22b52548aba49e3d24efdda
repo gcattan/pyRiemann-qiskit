@@ -1,0 +1,20 @@
+pyriemann_qiskit/optimization/pkit_optimizer.py
+  s_126363927ea73d::t_2d07be070ce30c 10-12,41-169,171-442
+  s_126363927ea73d::t_881007f611f070 34-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1ecc33b295e25808b22b52548aba49e3d24efdda",
+  "prompts": {},
+  "sessions": {
+    "s_126363927ea73d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f273b896-4b5d-4c47-918c-d8b274ec7c3c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
