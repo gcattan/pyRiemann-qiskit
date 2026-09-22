@@ -1,0 +1,19 @@
+pyriemann_qiskit/optimization/docplex.py
+  s_769e3fbeef2e97::t_a587e2602e9525 442-463
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4138d2a103aaee335907f63593fe097cb7fa199b",
+  "prompts": {},
+  "sessions": {
+    "s_769e3fbeef2e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b05b589b-7100-4e45-b341-a2d596347051",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
