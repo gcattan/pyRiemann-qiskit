@@ -1,0 +1,25 @@
+examples/resting_states/noplot_all_moabb_datasets.py
+  s_d3f2423fb02f60::t_785255b1f62244 15-20,27,47-48,50-51,60,64-68,77-85,105,111-115,150-151,153-163,170-172,175-180,182,185-196,198,201,203,206,208-218,222,224-230,234-240,242-244,249-251,255-260,273-274,276-278,281-286,290-291,293-294,303-304,306-307,313,317-319,328,330,334,384
+pyriemann_qiskit/utils/transfer.py
+  s_d3f2423fb02f60::t_785255b1f62244 22,97-153,159,162-168,298,309,315
+pyriemann_qiskit/classification/quantum_state_discriminator.py
+  s_d3f2423fb02f60::t_785255b1f62244 124-126,128-129
+examples/resting_states/noplot_all_moabb_datasets_baseline.py
+  s_d3f2423fb02f60::t_785255b1f62244 37,82-85,157,165-169,173,175,190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f8546612ec5d00ce53760470c4d1eac661ddf950",
+  "prompts": {},
+  "sessions": {
+    "s_d3f2423fb02f60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8878810c-0c31-4b38-a2eb-d9711752f861",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
