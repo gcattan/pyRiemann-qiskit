@@ -1,0 +1,23 @@
+pyriemann_qiskit/classification/algorithms.py
+  s_d3f2423fb02f60::t_bb9b733b0736b7 200-201
+  s_d3f2423fb02f60::t_8b511c7213c89a 129-130,132-140
+  s_d3f2423fb02f60::t_9256dd5f41f5d8 14
+  s_d3f2423fb02f60::t_d05037e25455a0 15
+  s_d3f2423fb02f60::t_9813b92f5939fc 131,141-145,149,152-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "555f737ae28ca1d98872fc10180d7a4cf8f804d3",
+  "prompts": {},
+  "sessions": {
+    "s_d3f2423fb02f60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8878810c-0c31-4b38-a2eb-d9711752f861",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
