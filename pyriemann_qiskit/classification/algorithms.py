@@ -11,7 +11,8 @@ from warnings import warn
 import numpy as np
 from joblib import Parallel, delayed
 from pyriemann.classification import MDM
-from pyriemann.utils.distance import distance
+from pyriemann.utils.base import logm
+from pyriemann.utils.distance import distance_euclid
 from pyriemann.utils.utils import check_metric
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils.extmath import softmax
@@ -125,12 +126,36 @@ class NearestConvexHull(ClassifierMixin, TransformerMixin, BaseEstimator):
         for c in self.classes_:
             self.matrices_per_class_[c] = X[y == c]
 
+        # Matrix logarithms of the training matrices, filled at the first
+        # prediction (see _cache_log_matrices).
+        self.log_matrices_per_class_ = {}
+
+    def _cache_log_matrices(self):
+        """Compute the matrix logarithms of the training matrices once.
+
+        The min-hull search needs the log-Euclidean distance from each test
+        matrix to every training matrix. Caching the logarithms avoids
+        recomputing them for every test matrix. The distances are unchanged.
+        """
+        if not self.log_matrices_per_class_:
+            for c in self.classes_:
+                self.log_matrices_per_class_[c] = np.array(
+                    [logm(m) for m in self.matrices_per_class_[c]]
+                )
+
     def _process_sample_min_hull(self, x):
         """Finds the closest matrices and uses them to build a single hull per class"""
         dists = []
+        log_x = logm(x)
 
         for c in self.classes_:
-            dist = distance(self.matrices_per_class_[c], x, metric="logeuclid")[:, 0]
+            # Log-Euclidean distance to every training matrix of the class,
+            # from the cached logarithms. Same values as
+            # distance(self.matrices_per_class_[c], x, metric="logeuclid").
+            log_matrices = self.log_matrices_per_class_[c]
+            dist = np.empty(len(log_matrices))
+            for i, log_m in enumerate(log_matrices):
+                dist[i] = distance_euclid(log_m, log_x)
             # take the closest matrices
             indexes = np.argsort(dist)[0 : self.n_samples_per_hull]
 
@@ -172,6 +197,8 @@ class NearestConvexHull(ClassifierMixin, TransformerMixin, BaseEstimator):
         dists = []
 
         if self.subsampling == "min" or self.subsampling == "full":
+            # Once, here, so that parallel workers share the cached values.
+            self._cache_log_matrices()
             self._process_sample = self._process_sample_min_hull
         elif self.subsampling == "random":
             self._process_sample = self._process_sample_random_hull
