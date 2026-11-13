@@ -1,0 +1,42 @@
+examples/resting_states/noplot_all_moabb_datasets.py
+  s_d3f2423fb02f60::t_e20a9110a16eb2 139-141,151-152
+  s_d3f2423fb02f60::t_de01250400338d 237-238
+  s_d3f2423fb02f60::t_40b1033d8346f1 50
+pyriemann_qiskit/classification/wrappers.py
+  s_d3f2423fb02f60::t_d38a07206df12d 859-864
+  s_d3f2423fb02f60::t_ee020a76b86375 810-811
+pyriemann_qiskit/utils/docplex.py
+  s_d3f2423fb02f60::t_340e87285d500f 441-442
+  s_d3f2423fb02f60::t_eacafd0366e177 597-600
+  s_d3f2423fb02f60::t_3e75cfe3842de0 449,452-453
+  s_d3f2423fb02f60::t_8f17e386a04a50 439-440,443-448,450-451,463-464
+  s_d3f2423fb02f60::t_32855045de1411 483
+  s_d3f2423fb02f60::t_ff75178b3ecf31 23-28
+  s_d3f2423fb02f60::t_ebb62e17fe4c94 501-503
+  s_d3f2423fb02f60::t_4f9a29ea45d40d 482,490-500,504-509
+  s_d3f2423fb02f60::t_743cc104944a8a 592-593,601-622
+pyriemann_qiskit/utils/distance.py
+  s_d3f2423fb02f60::t_81be709563233a 131-132
+  s_d3f2423fb02f60::t_70008e17c9ea63 11
+  s_d3f2423fb02f60::t_4559f3b90ad619 108-114,123-126,129-130
+pyriemann_qiskit/utils/utils.py
+  s_d3f2423fb02f60::t_64914073cc2d97 132
+tests/test_docplex.py
+  s_d3f2423fb02f60::t_9268a5b5d99dcf 48-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a9e6f51ecf4740c79f1a530ad85c85a0eb9ae876",
+  "prompts": {},
+  "sessions": {
+    "s_d3f2423fb02f60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8878810c-0c31-4b38-a2eb-d9711752f861",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
