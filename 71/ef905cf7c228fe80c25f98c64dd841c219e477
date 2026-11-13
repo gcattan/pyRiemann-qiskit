@@ -1,0 +1,40 @@
+pyriemann_qiskit/utils/docplex.py
+  s_d3f2423fb02f60::t_3bd9ef73127ce3 611-613,625,627-628,633-650
+  s_d3f2423fb02f60::t_399a2ebce9a191 455-461,472-473
+  s_d3f2423fb02f60::t_55b97df89dd79b 35
+  s_d3f2423fb02f60::t_047c8073222248 493,502
+pyriemann_qiskit/utils/utils.py
+  s_d3f2423fb02f60::t_58ed61fbfd0cf8 137
+  s_d3f2423fb02f60::t_a436a3abbebcfc 83-84
+  s_d3f2423fb02f60::t_8ab0d728d716be 106
+  s_d3f2423fb02f60::t_540946bbb46db9 49
+examples/resting_states/noplot_all_moabb_datasets.py
+  s_d3f2423fb02f60::t_403d573cc42ca7 142-143,155
+  s_d3f2423fb02f60::t_7a74224cd4c3e6 242
+pyriemann_qiskit/classification/wrappers.py
+  s_d3f2423fb02f60::t_b152eb62c3bdc9 900,908
+  s_d3f2423fb02f60::t_71f4faf66b6c29 869-873
+  s_d3f2423fb02f60::t_4b579b6072d609 811
+  s_d3f2423fb02f60::t_f58f1f776ce802 933
+pyriemann_qiskit/utils/qaoa_statevector.py
+  s_d3f2423fb02f60::t_6ba7646cff12dc 1-148,150-157
+  s_d3f2423fb02f60::t_6ab9effddcc983 149
+tests/test_docplex.py
+  s_d3f2423fb02f60::t_8f751bdbb34c1c 107-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "71ef905cf7c228fe80c25f98c64dd841c219e477",
+  "prompts": {},
+  "sessions": {
+    "s_d3f2423fb02f60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8878810c-0c31-4b38-a2eb-d9711752f861",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
