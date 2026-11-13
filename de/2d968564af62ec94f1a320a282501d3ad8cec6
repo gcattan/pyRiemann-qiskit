@@ -1,0 +1,20 @@
+examples/toys_dataset/noplot_nreps_ablation.py
+  s_d3f2423fb02f60::t_373ab442a0e7bf 34
+  s_d3f2423fb02f60::t_cae7a01264ab16 115-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "de2d968564af62ec94f1a320a282501d3ad8cec6",
+  "prompts": {},
+  "sessions": {
+    "s_d3f2423fb02f60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8878810c-0c31-4b38-a2eb-d9711752f861",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregoire CATTAN <gregoire.cattan@ibm.com>"
+    }
+  }
+}
