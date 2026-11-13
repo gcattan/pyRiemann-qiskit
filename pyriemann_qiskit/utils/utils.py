@@ -46,6 +46,7 @@ def get_docplex_optimizer_from_params_bag(
     n_reps,
     qaoa_initial_points,
     qaoacv_implementation,
+    qaoa_simulator="sampler",
 ):
     """Factory function to create optimizer based on parameters.
 
@@ -79,6 +80,8 @@ def get_docplex_optimizer_from_params_bag(
         QAOA-CV implementation variant. "ulvi" selects QAOACVAngleOptimizer,
         "luna" or other values select QAOACVOptimizer.
         If not quantum or create_mixer is undefined, then does nothing.
+    qaoa_simulator : {"sampler", "statevector"}, default="sampler"
+        Simulator of the NaiveQAOAOptimizer (see NaiveQAOAOptimizer).
 
     Returns
     -------
@@ -100,6 +103,7 @@ def get_docplex_optimizer_from_params_bag(
     .. versionadded:: 0.4.1
     .. versionchanged:: 0.5.0
             add qaoacv_implementation parameter
+            add qaoa_simulator parameter
 
     """
     if quantum:
@@ -129,6 +133,8 @@ def get_docplex_optimizer_from_params_bag(
                 upper_bound=upper_bound,
                 optimizer=qaoa_optimizer,
                 initial_points=qaoa_initial_points,
+                n_reps=n_reps,
+                simulator=qaoa_simulator,
             )
     else:
         logger._log(f"Using ClassicalOptimizer ({type(classical_optimizer).__name__})")

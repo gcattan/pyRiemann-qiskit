@@ -121,11 +121,12 @@ class QuantumStateDiscriminator(ClassifierMixin, BaseEstimator):
         for c in self.classes_:
             idx = np.where(y == c)[0]
             priors[c] = len(idx) / n_total
-            Sigma_c = np.zeros((self.n_channels_, self.n_channels_))
+            # Normalize each trial to trace 1 before averaging, so every trial
+            # weighs the same whatever its power. The mean keeps trace 1.
+            rho_c = np.zeros((self.n_channels_, self.n_channels_))
             for i in idx:
-                Sigma_c += X[i] @ X[i].T / X[i].shape[1]
-            Sigma_c /= len(idx)
-            density_matrices[c] = Sigma_c / np.trace(Sigma_c)
+                rho_c += _build_operator(X[i])
+            density_matrices[c] = rho_c / len(idx)
 
         self.priors_ = priors
         self.density_matrices_ = density_matrices

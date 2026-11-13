@@ -31,6 +31,7 @@ import pandas as pd
 from pyriemann.estimation import Covariances
 from pyriemann.preprocessing import Whitening
 from pyriemann.tangentspace import TangentSpace
+from qiskit_algorithms.optimizers import COBYLA
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
@@ -111,6 +112,8 @@ def make_pipelines(n_reps, seed):
                 subsampling="min",
                 shots=100,
                 seed=seed,
+                qaoa_optimizer=COBYLA(maxiter=100),
+                qaoa_initial_points="ramp",
             ),
         ),
         "NCH+QIOCE": make_pipeline(
