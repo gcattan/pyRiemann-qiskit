@@ -808,7 +808,7 @@ class QuanticNCH(QuanticClassifierBase):
     .. versionchanged:: 0.5.0
         Add the qaoacv_implementation parameter.
         n_reps also sets the number of layers of the NaiveQAOAOptimizer, and
-        qaoa_initial_points accepts "ramp".
+        qaoa_initial_points accepts "ramp". Add the qaoa_simulator parameter.
 
     Parameters
     ----------
@@ -866,6 +866,11 @@ class QuanticNCH(QuanticClassifierBase):
         QAOA-CV implementation variant. When create_mixer is provided:
         "ulvi" selects QAOACVAngleOptimizer, "luna" or other string values
         select QAOACVOptimizer. If None, uses default QAOA-CV behavior.
+    qaoa_simulator : {"sampler", "statevector"}, default="sampler"
+        Simulator of the NaiveQAOAOptimizer. "sampler" runs qiskit's QAOA on
+        the backend. "statevector" runs the same QAOA with the circuit
+        simulated exactly in numpy, with the same shots and seed: much faster,
+        for noiseless simulation only (see NaiveQAOAOptimizer).
 
     References
     ----------
@@ -892,6 +897,7 @@ class QuanticNCH(QuanticClassifierBase):
         n_reps=3,
         qaoa_initial_points=[0.0, 0.0],
         qaoacv_implementation=None,
+        qaoa_simulator="sampler",
     ):
         QuanticClassifierBase.__init__(
             self, quantum, q_account_token, verbose, shots, None, seed
@@ -899,6 +905,7 @@ class QuanticNCH(QuanticClassifierBase):
         self.upper_bound = upper_bound
         self.regularization = regularization
         self.classical_optimizer = classical_optimizer
+        self.qaoa_simulator = qaoa_simulator
         self.n_hulls_per_class = n_hulls_per_class
         self.n_samples_per_hull = n_samples_per_hull
         self.n_jobs = n_jobs
@@ -923,6 +930,7 @@ class QuanticNCH(QuanticClassifierBase):
             self.n_reps,
             self.qaoa_initial_points,
             self.qaoacv_implementation,
+            qaoa_simulator=self.qaoa_simulator,
         )
 
         classifier = NearestConvexHull(

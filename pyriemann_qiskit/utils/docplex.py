@@ -32,6 +32,7 @@ from typing_extensions import deprecated
 
 from .hyper_params_factory import create_mixer_rotational_X_gates
 from .math import is_pauli_identity
+from .qaoa_statevector import solve_qubo_qaoa_statevector
 from .quantum_provider import get_simulator
 
 
@@ -451,6 +452,13 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         before QAOA, so that the angles have the same scale whatever the
         magnitude of the problem. None rescales only with the "ramp" initial
         points, which assume a cost of unit scale.
+    simulator : {"sampler", "statevector"}, default="sampler"
+        "sampler" runs qiskit's QAOA on the quantum instance. "statevector"
+        runs the same QAOA with the circuit simulated exactly in numpy
+        (see :func:`solve_qubo_qaoa_statevector`), with the shots and seed of
+        the quantum instance. It gives the same state, much faster, but draws
+        the measurements with numpy's random generator. Use it only for
+        noiseless simulation.
 
     Notes
     -----
@@ -461,7 +469,8 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         add `evaluated_values_` attribute.
         add optimizer parameter.
     .. versionchanged:: 0.4.2
-        add n_reps and rescale parameters, and the "ramp" initial points.
+        add n_reps, rescale and simulator parameters, and the "ramp" initial
+        points.
 
     Attributes
     ----------
@@ -481,6 +490,7 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         initial_points=[0.0, 0.0],
         n_reps=1,
         rescale=None,
+        simulator="sampler",
     ):
         pyQiskitOptimizer.__init__(self)
         self.upper_bound = upper_bound
@@ -489,6 +499,7 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         self.initial_points = initial_points
         self.n_reps = n_reps
         self.rescale = rescale
+        self.simulator = simulator
 
     def _initial_point(self):
         """Initial QAOA angles, ordered as qiskit orders them (betas, gammas)."""
@@ -597,6 +608,9 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         rescale = self.rescale
         if rescale is None:
             rescale = isinstance(self.initial_points, str)
+        if self.simulator not in ["sampler", "statevector"]:
+            raise ValueError(f"Unknown simulator {self.simulator}.")
+        problem = None
         if rescale:
             # Penalize the constraints first, then scale the whole QUBO to a
             # unit largest coefficient. The minimizer is unchanged.
@@ -608,15 +622,32 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
                 ]
             )
             scale = 1.0 / max(np.abs(coefs).max(), 1e-12)
-            scaled = QuadraticProgram()
+            problem = QuadraticProgram()
             for variable in penalized.variables:
-                scaled.binary_var(variable.name)
-            scaled.minimize(
+                problem.binary_var(variable.name)
+            problem.minimize(
                 constant=penalized.objective.constant * scale,
                 linear=penalized.objective.linear.to_array() * scale,
                 quadratic=penalized.objective.quadratic.to_array() * scale,
             )
-            x = qaoa.solve(scaled).x[: qubo.get_num_vars()]
+        if self.simulator == "statevector":
+            # Same QAOA, with the circuit simulated exactly in numpy and the
+            # shots and seed of the quantum instance.
+            if problem is None:
+                problem = QuadraticProgramToQubo().convert(qubo)
+            options = getattr(quantum_instance, "options", None)
+            x = solve_qubo_qaoa_statevector(
+                problem,
+                self.optimizer,
+                self._initial_point(),
+                self.n_reps,
+                shots=getattr(options, "shots", None) or 1024,
+                seed=getattr(options, "seed_simulator", None),
+                callback=_callback,
+            )
+            result = conv.interpret(x[: qubo.get_num_vars()])
+        elif problem is not None:
+            x = qaoa.solve(problem).x[: qubo.get_num_vars()]
             result = conv.interpret(x)
         else:
             result = conv.interpret(qaoa.solve(qubo))

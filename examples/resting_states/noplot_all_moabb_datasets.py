@@ -139,6 +139,8 @@ pipelines["NCH+MIN_HULL_QAOACV(Ulvi)"] = make_pipeline(
 # NaiveQAOA: p=2 layers, starting from a linear ramp on the rescaled cost.
 # (0, 0) is a stationary point of QAOA, and SLSQP's finite differences are
 # zero or noisy on a sampled objective, so COBYLA is used.
+# The 18-qubit circuits are simulated exactly in numpy (same state as the
+# Aer statevector, same shots and seed), which is much faster than Aer here.
 pipelines["NCH+MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
@@ -150,6 +152,7 @@ pipelines["NCH+MIN_HULL_NAIVEQAOA"] = make_pipeline(
         n_reps=2,
         qaoa_optimizer=COBYLA(maxiter=100),
         qaoa_initial_points="ramp",
+        qaoa_simulator="statevector",
     ),
 )
 
@@ -236,6 +239,7 @@ pipelines["NCH+MIN_HULL_NAIVEQAOA+TL"] = SelfAlignAdapter(
         n_reps=2,
         qaoa_optimizer=COBYLA(maxiter=100),
         qaoa_initial_points="ramp",
+        qaoa_simulator="statevector",
     ),
 )
 
