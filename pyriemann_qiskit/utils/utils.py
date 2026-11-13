@@ -129,6 +129,7 @@ def get_docplex_optimizer_from_params_bag(
                 upper_bound=upper_bound,
                 optimizer=qaoa_optimizer,
                 initial_points=qaoa_initial_points,
+                n_reps=n_reps,
             )
     else:
         logger._log(f"Using ClassicalOptimizer ({type(classical_optimizer).__name__})")

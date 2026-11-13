@@ -8,7 +8,7 @@ from pyriemann.utils.distance import (
 )
 from pyriemann.utils.mean import mean_logeuclid
 
-from .docplex import ClassicalOptimizer
+from .docplex import ClassicalOptimizer, NaiveQAOAOptimizer
 
 
 def qdistance_logeuclid_to_convex_hull(A, B, optimizer=ClassicalOptimizer()):
@@ -105,7 +105,13 @@ def weights_logeuclid_to_convex_hull(A, B, optimizer=ClassicalOptimizer()):
         return np.trace(logm(m1) @ logm(m2))
 
     prob = Model()
-    w = optimizer.get_weights(prob, matrices)
+    raw = optimizer.get_weights(prob, matrices)
+    # Integer encodings (NaiveQAOA) represent the weights on a grid of step
+    # 1 / upper_bound: the integers sum to upper_bound and the objective uses
+    # them divided by upper_bound. With "sum == 1" on integers, the only
+    # feasible points would be the vertices of the hull.
+    bound = optimizer.upper_bound if isinstance(optimizer, NaiveQAOAOptimizer) else None
+    w = raw if bound is None else [raw[i] / bound for i in matrices]
 
     wtLogAtLogAw = prob.sum(
         w[i] * w[j] * trace_prod_log(A[i], A[j]) for i in matrices for j in matrices
@@ -114,9 +120,16 @@ def weights_logeuclid_to_convex_hull(A, B, optimizer=ClassicalOptimizer()):
     objective = wtLogAtLogAw - 2 * wLogBLogA
 
     prob.set_objective("min", objective)
-    prob.add_constraint(prob.sum(w) == 1)
+    if bound is None:
+        prob.add_constraint(prob.sum(w) == 1)
+    else:
+        prob.add_constraint(prob.sum(raw) == bound)
 
     weights = optimizer.solve(prob, reshape=False)
+    if bound is not None:
+        weights = np.asarray(weights, dtype=float) / bound
+        if weights.sum() <= 0:  # infeasible all-zero solution: no information
+            weights = np.full(n_matrices, 1.0 / n_matrices)
 
     return weights
 

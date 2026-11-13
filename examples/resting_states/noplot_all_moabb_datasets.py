@@ -47,7 +47,7 @@ from pyriemann.spatialfilters import CSP
 from pyriemann.tangentspace import TangentSpace
 from pyriemann.transfer import MDWM
 from pyriemann.utils.base import sqrtm
-from qiskit_algorithms.optimizers import NFT
+from qiskit_algorithms.optimizers import COBYLA, NFT
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression as LR
@@ -136,6 +136,9 @@ pipelines["NCH+MIN_HULL_QAOACV(Ulvi)"] = make_pipeline(
     ),
 )
 
+# NaiveQAOA: p=2 layers, starting from a linear ramp on the rescaled cost.
+# (0, 0) is a stationary point of QAOA, and SLSQP's finite differences are
+# zero or noisy on a sampled objective, so COBYLA is used.
 pipelines["NCH+MIN_HULL_NAIVEQAOA"] = make_pipeline(
     sf,
     QuanticNCH(
@@ -145,6 +148,8 @@ pipelines["NCH+MIN_HULL_NAIVEQAOA"] = make_pipeline(
         subsampling="min",
         quantum=True,
         n_reps=2,
+        qaoa_optimizer=COBYLA(maxiter=100),
+        qaoa_initial_points="ramp",
     ),
 )
 
@@ -229,6 +234,8 @@ pipelines["NCH+MIN_HULL_NAIVEQAOA+TL"] = SelfAlignAdapter(
         subsampling="min",
         quantum=True,
         n_reps=2,
+        qaoa_optimizer=COBYLA(maxiter=100),
+        qaoa_initial_points="ramp",
     ),
 )
 

@@ -20,8 +20,12 @@ from qiskit.quantum_info import Statevector, partial_trace
 from qiskit_algorithms import QAOA
 from qiskit_algorithms.optimizers import L_BFGS_B, SLSQP, SPSA
 from qiskit_optimization.algorithms import CobylaOptimizer, MinimumEigenOptimizer
-from qiskit_optimization.converters import IntegerToBinary, LinearEqualityToPenalty
-from qiskit_optimization.problems import VarType
+from qiskit_optimization.converters import (
+    IntegerToBinary,
+    LinearEqualityToPenalty,
+    QuadraticProgramToQubo,
+)
+from qiskit_optimization.problems import QuadraticProgram, VarType
 from qiskit_optimization.translators import from_docplex_mp
 from sklearn.preprocessing import MinMaxScaler
 from typing_extensions import deprecated
@@ -432,8 +436,21 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
     optimizer : SciPyOptimizer, default=SLSQP()
         An instance of a scipy optimizer to find the optimal weights for the
         parametric circuit (ansatz).
-    initial_points : Tuple[int, int], default=[0.0, 0.0].
-        Starting parameters (beta and gamma) for the QAOA.
+    initial_points : list[float] | "ramp", default=[0.0, 0.0].
+        Starting parameters of the QAOA, ordered as qiskit orders them:
+        the betas, then the gammas. Its length must be ``2 * n_reps``, or 2,
+        in which case the same (beta, gamma) pair starts every layer.
+        "ramp" uses a linear ramp: gamma rises and beta falls across layers,
+        gamma_k = (k - 1/2) / n_reps and beta_k = 1 - gamma_k, as in an
+        annealing schedule. Note that (0, 0) is a stationary point of the QAOA
+        cost: the optimizer cannot leave it.
+    n_reps : int, default=1
+        Number of QAOA layers (p).
+    rescale : bool | None, default=None
+        If True, the penalized QUBO is divided by its largest coefficient
+        before QAOA, so that the angles have the same scale whatever the
+        magnitude of the problem. None rescales only with the "ramp" initial
+        points, which assume a cost of unit scale.
 
     Notes
     -----
@@ -443,6 +460,8 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
     .. versionchanged:: 0.3.0
         add `evaluated_values_` attribute.
         add optimizer parameter.
+    .. versionchanged:: 0.4.2
+        add n_reps and rescale parameters, and the "ramp" initial points.
 
     Attributes
     ----------
@@ -460,12 +479,34 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         quantum_instance=None,
         optimizer=SLSQP(),
         initial_points=[0.0, 0.0],
+        n_reps=1,
+        rescale=None,
     ):
         pyQiskitOptimizer.__init__(self)
         self.upper_bound = upper_bound
         self.quantum_instance = quantum_instance
         self.optimizer = optimizer
         self.initial_points = initial_points
+        self.n_reps = n_reps
+        self.rescale = rescale
+
+    def _initial_point(self):
+        """Initial QAOA angles, ordered as qiskit orders them (betas, gammas)."""
+        if isinstance(self.initial_points, str):
+            if self.initial_points != "ramp":
+                raise ValueError(f"Unknown initial points {self.initial_points}.")
+            gammas = [(k + 0.5) / self.n_reps for k in range(self.n_reps)]
+            return [1.0 - g for g in gammas] + gammas
+        point = list(self.initial_points)
+        if len(point) == 2 and self.n_reps > 1:
+            # One (beta, gamma) pair: use it for every layer.
+            point = [point[0]] * self.n_reps + [point[1]] * self.n_reps
+        if len(point) != 2 * self.n_reps:
+            raise ValueError(
+                f"{len(point)} initial points for {self.n_reps} layers "
+                f"(expected {2 * self.n_reps})."
+            )
+        return point
 
     def convert_spdmat(self, X):
         """Convert a SPD matrix
@@ -548,11 +589,37 @@ class NaiveQAOAOptimizer(pyQiskitOptimizer):
         qaoa_mes = QAOA(
             sampler=quantum_instance,
             optimizer=self.optimizer,
-            initial_point=self.initial_points,
+            reps=self.n_reps,
+            initial_point=self._initial_point(),
             callback=_callback,
         )
         qaoa = MinimumEigenOptimizer(qaoa_mes)
-        result = conv.interpret(qaoa.solve(qubo))
+        rescale = self.rescale
+        if rescale is None:
+            rescale = isinstance(self.initial_points, str)
+        if rescale:
+            # Penalize the constraints first, then scale the whole QUBO to a
+            # unit largest coefficient. The minimizer is unchanged.
+            penalized = QuadraticProgramToQubo().convert(qubo)
+            coefs = np.concatenate(
+                [
+                    penalized.objective.linear.to_array(),
+                    penalized.objective.quadratic.to_array().ravel(),
+                ]
+            )
+            scale = 1.0 / max(np.abs(coefs).max(), 1e-12)
+            scaled = QuadraticProgram()
+            for variable in penalized.variables:
+                scaled.binary_var(variable.name)
+            scaled.minimize(
+                constant=penalized.objective.constant * scale,
+                linear=penalized.objective.linear.to_array() * scale,
+                quadratic=penalized.objective.quadratic.to_array() * scale,
+            )
+            x = qaoa.solve(scaled).x[: qubo.get_num_vars()]
+            result = conv.interpret(x)
+        else:
+            result = conv.interpret(qaoa.solve(qubo))
         if reshape:
             n_channels = int(math.sqrt(result.shape[0]))
             return np.reshape(result, (n_channels, n_channels))
